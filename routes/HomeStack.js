@@ -1,15 +1,45 @@
 import { createStackNavigator } from '@react-navigation/stack';
-import HomeScreen from '../screens/HomeScreen';
+import SplashScreen from '../screens/SplashScreen';
 import SignInScreen from '../screens/SignInScreen';
 import SignUpScreen from '../screens/SignUpScreen';
+import HomeScreen from '../screens/HomeScreen';
+import { AuthContext } from '../Helper/Context';
+import { useContext } from 'react';
+
 const Stack = createStackNavigator();
 
 function HomeStack() {
+  const { loggedIn } = useContext(AuthContext);
+
   return (
     <Stack.Navigator>
-      <Stack.Screen name="HomeScreen" component={HomeScreen} />
-      <Stack.Screen name="SignInScreen" component={SignInScreen} />
-      <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
+      {loggedIn ? (
+        <Stack.Group>
+          <Stack.Screen
+            name="HomeScreen"
+            component={HomeScreen}
+            options={{ headerShown: false }}
+          />
+        </Stack.Group>
+      ) : (
+        <Stack.Group>
+          <Stack.Screen
+            name="SplashScreen"
+            component={SplashScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="SignInScreen"
+            component={SignInScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="SignUpScreen"
+            component={SignUpScreen}
+            options={{ headerShown: false }}
+          />
+        </Stack.Group>
+      )}
     </Stack.Navigator>
   );
 }

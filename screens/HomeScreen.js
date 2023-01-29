@@ -1,41 +1,46 @@
-import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Text, Button } from 'react-native-paper';
+import React, { useState } from 'react';
+import { BottomNavigation, Text } from 'react-native-paper';
+import { HomeRoute } from './BottomTabsScreens/HomeRoute';
+import { AccountRoute } from './BottomTabsScreens/AccountRoute';
+import { TransactionRoute } from './BottomTabsScreens/TransactionRoute';
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = () => {
+  const [index, setIndex] = useState(0);
+  const [routes] = useState([
+    {
+      key: 'home',
+      title: 'Home',
+      focusedIcon: 'home',
+      unfocusedIcon: 'home-outline',
+    },
+    {
+      key: 'transaction',
+      title: 'Transaction',
+      focusedIcon: 'note-plus',
+      unfocusedIcon: 'note-plus-outline',
+    },
+    {
+      key: 'account',
+      title: 'Account',
+      focusedIcon: 'account',
+      unfocusedIcon: 'account-outline',
+    },
+  ]);
+  const renderScene = BottomNavigation.SceneMap({
+    home: HomeRoute,
+    transaction: TransactionRoute,
+    account: AccountRoute,
+  });
   return (
-    <View style={styles.container}>
-      <View style={styles.headlineContainer}>
-        <Text variant="displayLarge">Let's Get Started</Text>
-        <Text variant="headlineSmall">Track Expense</Text>
-        <Button
-          mode="contained"
-          onPress={() => navigation.navigate('SignInScreen')}
-          style={styles.button}
-        >
-          Join Now
-        </Button>
-      </View>
-    </View>
+    <BottomNavigation
+      navigationState={{ index, routes }}
+      onIndexChange={setIndex}
+      renderScene={renderScene}
+    />
   );
 };
 
 export default HomeScreen;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  headlineContainer: {
-    width: '90%',
-    marginBottom: '10%',
-  },
-  button: {
-    marginTop: 10,
-    paddingVertical: 10,
-    borderRadius: 100,
-  },
-});
+const styles = StyleSheet.create({});
