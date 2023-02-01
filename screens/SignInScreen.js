@@ -1,24 +1,14 @@
 import { StyleSheet, View } from 'react-native';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Button, Text, TextInput, Appbar } from 'react-native-paper';
-import { onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config';
-import { AuthContext } from '../Helper/Context';
+import { LoginContext } from '../Helper/Context';
 const SignInScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showLoading, setShowLoading] = useState(false);
-  const { loggedIn, setLoggedIn } = useContext(AuthContext);
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setLoggedIn(true);
-      }
-    });
-    return () => {
-      unsub();
-    };
-  }, []);
+  const { loggedIn, setLoggedIn } = useContext(LoginContext);
 
   const handleSignIn = async () => {
     try {

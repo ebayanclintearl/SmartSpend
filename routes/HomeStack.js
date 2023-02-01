@@ -3,13 +3,13 @@ import SplashScreen from '../screens/SplashScreen';
 import SignInScreen from '../screens/SignInScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import HomeScreen from '../screens/HomeScreen';
-import { AuthContext } from '../Helper/Context';
+import { LoginContext } from '../Helper/Context';
 import { useContext } from 'react';
 
 const Stack = createStackNavigator();
 
 function HomeStack() {
-  const { loggedIn } = useContext(AuthContext);
+  const { loggedIn } = useContext(LoginContext);
 
   return (
     <Stack.Navigator>

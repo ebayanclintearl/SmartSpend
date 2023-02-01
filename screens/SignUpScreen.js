@@ -1,29 +1,24 @@
 import { StyleSheet, View } from 'react-native';
 import React, { useContext, useState } from 'react';
 import { TextInput, Button, Appbar, Text, Checkbox } from 'react-native-paper';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, db } from '../config';
 import { doc, getDocs, setDoc } from 'firebase/firestore';
-import { AuthContext } from '../Helper/Context';
+import { LoginContext } from '../Helper/Context';
 import { collection, query, where } from 'firebase/firestore';
 const SignUpScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [accountName, setAccountName] = useState('');
-  const { loggedIn, setLoggedIn } = useContext(AuthContext);
+  const { loggedIn, setLoggedIn } = useContext(LoginContext);
   const [showLoading, setShowLoading] = useState(false);
   const [famProvider, setFamProvider] = useState(true);
   const [famCode, setFamCode] = useState('');
   const [error, setError] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [genFamCode, setGenFamCode] = useState('');
 
   const handleSignUp = async () => {
     setShowLoading(true);
-    if (famProvider) {
-      const code = Math.floor(Math.random() * 90000) + 10000;
-      setGenFamCode(code.toString());
-    }
     if (!famProvider) {
       if (!famCode.trim()) {
         setShowLoading(false);
@@ -62,12 +57,16 @@ const SignUpScreen = ({ navigation }) => {
     }
     try {
       const res = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(res.user, {
+        displayName: accountName,
+      });
+      const code = Math.floor(Math.random() * 90000) + 10000;
       await setDoc(doc(db, 'users', res.user.uid), {
         uid: res.user.uid,
         name: accountName,
         email: email,
         type: famProvider ? 'provider' : 'member',
-        code: genFamCode ? genFamCode : famCode,
+        code: famProvider ? code.toString() : famCode,
       });
       setLoggedIn(true);
       console.log('Done execution, sign up');
