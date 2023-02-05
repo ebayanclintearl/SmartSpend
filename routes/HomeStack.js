@@ -5,6 +5,7 @@ import SignUpScreen from '../screens/SignUpScreen';
 import HomeScreen from '../screens/HomeScreen';
 import { LoginContext } from '../Helper/Context';
 import { useContext } from 'react';
+import TransactionScreen from '../screens/TransactionScreen';
 
 const Stack = createStackNavigator();
 
@@ -18,6 +19,11 @@ function HomeStack() {
           <Stack.Screen
             name="HomeScreen"
             component={HomeScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="TransactionScreen"
+            component={TransactionScreen}
             options={{ headerShown: false }}
           />
         </Stack.Group>

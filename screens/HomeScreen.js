@@ -5,7 +5,7 @@ import { HomeRoute } from './BottomTabsScreens/HomeRoute';
 import { AccountRoute } from './BottomTabsScreens/AccountRoute';
 import { TransactionRoute } from './BottomTabsScreens/TransactionRoute';
 
-const HomeScreen = () => {
+const HomeScreen = ({ navigation }) => {
   const [index, setIndex] = useState(0);
   const [routes] = useState([
     {
@@ -37,6 +37,7 @@ const HomeScreen = () => {
       navigationState={{ index, routes }}
       onIndexChange={setIndex}
       renderScene={renderScene}
+      shifting={true}
     />
   );
 };

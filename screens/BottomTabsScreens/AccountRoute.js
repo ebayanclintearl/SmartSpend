@@ -1,5 +1,13 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { Avatar, Button, Dialog, Portal, Text } from 'react-native-paper';
+import {
+  Avatar,
+  Button,
+  Card,
+  Dialog,
+  IconButton,
+  Portal,
+  Text,
+} from 'react-native-paper';
 import { signOut } from 'firebase/auth';
 import { auth, db } from '../../config';
 import { AuthContext, LoginContext } from '../../Helper/Context';
@@ -63,13 +71,19 @@ export const AccountRoute = () => {
           <Dialog.ScrollArea>
             <ScrollView contentContainerStyle={{ paddingHorizontal: 24 }}>
               {usersData &&
-                usersData?.map((item, id) => (
-                  <>
-                    <View key={id} style={{ flexDirection: 'row' }}>
-                      <Avatar.Text size={24} label={item.name.slice(0, 1)} />
-                      <Text variant="titleSmall"> {item.name}</Text>
-                    </View>
-                  </>
+                usersData?.map((item) => (
+                  <Card.Title
+                    key={item.uid}
+                    title={item.name}
+                    subtitle={item.email}
+                    left={(props) => (
+                      <Avatar.Text
+                        {...props}
+                        size={24}
+                        label={item.name.slice(0, 1)}
+                      />
+                    )}
+                  />
                 ))}
             </ScrollView>
           </Dialog.ScrollArea>
@@ -87,17 +101,17 @@ export const AccountRoute = () => {
           <>
             <Text variant="titleMedium">Family Provider</Text>
             <Text variant="titleMedium">Family Code: {accountData?.code}</Text>
+            <Button
+              onPress={() => {
+                setVisible(true);
+              }}
+            >
+              Show Family Accounts
+            </Button>
           </>
         ) : (
           <Text variant="titleMedium">Family Member</Text>
         ))}
-      <Button
-        onPress={() => {
-          setVisible(true);
-        }}
-      >
-        Show Family Accounts
-      </Button>
       <Button
         mode="text"
         onPress={() => {

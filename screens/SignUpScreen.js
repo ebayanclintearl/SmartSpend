@@ -3,7 +3,13 @@ import React, { useContext, useState } from 'react';
 import { TextInput, Button, Appbar, Text, Checkbox } from 'react-native-paper';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, db } from '../config';
-import { doc, getDocs, setDoc } from 'firebase/firestore';
+import {
+  arrayUnion,
+  doc,
+  getDocs,
+  setDoc,
+  updateDoc,
+} from 'firebase/firestore';
 import { LoginContext } from '../Helper/Context';
 import { collection, query, where } from 'firebase/firestore';
 const SignUpScreen = ({ navigation }) => {
@@ -26,10 +32,11 @@ const SignUpScreen = ({ navigation }) => {
         setErrorMsg('Empty Family Code');
         return;
       }
-      const usersRef = collection(db, 'users');
 
+      const usersRef = collection(db, 'users');
       const q = query(usersRef, where('code', '==', famCode));
       const querySnapshot = await getDocs(q);
+
       if (querySnapshot.empty) {
         setShowLoading(false);
         setError(true);
@@ -68,6 +75,34 @@ const SignUpScreen = ({ navigation }) => {
         type: famProvider ? 'provider' : 'member',
         code: famProvider ? code.toString() : famCode,
       });
+      if (famProvider) {
+        await setDoc(doc(db, 'familyGroup', code.toString()), {
+          accounts: [
+            {
+              email: email,
+              name: accountName,
+              type: 'provider',
+              uid: res.user.uid,
+              transactions: [],
+            },
+          ],
+        });
+      }
+
+      if (!famProvider) {
+        const familyGroup = doc(db, 'familyGroup', famCode);
+        // update element in array
+        await updateDoc(familyGroup, {
+          accounts: arrayUnion({
+            email: email,
+            name: accountName,
+            type: 'member',
+            uid: res.user.uid,
+            transactions: [],
+          }),
+        });
+      }
+
       setLoggedIn(true);
       console.log('Done execution, sign up');
     } catch (error) {

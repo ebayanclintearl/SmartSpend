@@ -20,7 +20,7 @@ export default function App() {
   return (
     <AuthContext.Provider value={{ currentUser }}>
       <LoginContext.Provider value={{ loggedIn, setLoggedIn }}>
-        <PaperProvider>
+        <PaperProvider theme={{ dark: false, mode: 'exact' }}>
           <NavigationContainer>
             <HomeStack />
           </NavigationContainer>
