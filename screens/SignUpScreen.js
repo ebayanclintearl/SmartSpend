@@ -77,29 +77,23 @@ const SignUpScreen = ({ navigation }) => {
       });
       if (famProvider) {
         await setDoc(doc(db, 'familyGroup', code.toString()), {
-          accounts: [
-            {
-              email: email,
-              name: accountName,
-              type: 'provider',
-              uid: res.user.uid,
-              transactions: [],
-            },
-          ],
+          [res.user.uid]: {
+            email: email,
+            name: accountName,
+            type: 'provider',
+          },
+          transactions: [],
         });
       }
 
       if (!famProvider) {
         const familyGroup = doc(db, 'familyGroup', famCode);
-        // update element in array
         await updateDoc(familyGroup, {
-          accounts: arrayUnion({
+          [res.user.uid]: {
             email: email,
             name: accountName,
             type: 'member',
-            uid: res.user.uid,
-            transactions: [],
-          }),
+          },
         });
       }
 

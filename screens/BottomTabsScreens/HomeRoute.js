@@ -21,7 +21,7 @@ export const HomeRoute = () => {
       </Appbar.Header>
       <View>
         <Text>HomeRoute</Text>
-        <Text>{currentUser ? currentUser.email : null}</Text>
+        <Text>{currentUser?.email}</Text>
         <Button mode="text" onPress={() => {}}>
           Search
         </Button>

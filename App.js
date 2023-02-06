@@ -14,33 +14,50 @@ export default function App() {
   useEffect(() => {
     const authStateChange = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
-      const getAccountDetails = async () => {
-        const docRef = doc(db, 'users', currentUser?.uid);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          setAccountInfo(docSnap.data());
-        }
-      };
-      currentUser?.uid && getAccountDetails();
     });
     return () => {
       authStateChange();
     };
-  }, [currentUser?.uid]);
+  }, []);
 
   useEffect(() => {
-    if (!accountInfo.code) return;
-    const unsub = onSnapshot(
-      doc(db, 'familyGroup', accountInfo.code),
-      (doc) => {
-        setAccountsInfo(doc.data());
+    let isCancelled = false;
+
+    const getAccountDetails = async () => {
+      if (!currentUser?.uid || !db) return;
+      const docRef = doc(db, 'users', currentUser.uid);
+      const docSnap = await getDoc(docRef);
+
+      if (!isCancelled && docSnap.exists()) {
+        setAccountInfo(docSnap.data());
       }
-    );
-    return () => {
-      unsub();
     };
-  }, [accountInfo?.code]);
+
+    currentUser?.uid && getAccountDetails();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [currentUser, db]);
+
+  useEffect(() => {
+    if (!accountInfo || !accountInfo.code || !db) return;
+
+    let unsubscribe;
+
+    const updateFamilyGroup = async () => {
+      const docRef = doc(db, 'familyGroup', accountInfo.code);
+      unsubscribe = onSnapshot(docRef, (doc) => {
+        setAccountsInfo(doc.data());
+      });
+    };
+
+    updateFamilyGroup();
+
+    return () => {
+      unsubscribe && unsubscribe();
+    };
+  }, [accountInfo, db]);
 
   return (
     <AuthContext.Provider value={{ currentUser }}>

@@ -22,39 +22,71 @@ TextInput;
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { expenseCategories } from '../Helper/CategoriesData';
-import { collection, query } from 'firebase/firestore';
+import {
+  arrayUnion,
+  collection,
+  doc,
+  query,
+  updateDoc,
+} from 'firebase/firestore';
+import { AccountContext } from '../Helper/Context';
+import { db } from '../config';
 
 const TransactionScreen = ({ navigation }) => {
   const [expanded, setExpanded] = useState(false);
   const [date, setDate] = useState('');
+  const [dateString, setDateString] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState({});
-  const handlePress = () => setExpanded(!expanded);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [segmentValue, setSegmentValue] = useState('income');
+  const handlePress = () => setExpanded(!expanded);
+  const [error, setError] = useState('');
 
   const handleDateConfirm = (date) => {
     setDateTime(date);
     setDatePickerVisibility(false);
   };
   const { accountInfo, accountsInfo } = useContext(AccountContext);
-  console.log(accountsInfo);
   const handleSave = async () => {
-    // const familyGroup = doc(db, 'familyGroup');
-    // // update element in array
-    // await updateDoc(familyGroup, {
-    //   accounts: arrayUnion({
-    //     email: email,
-    //     name: accountName,
-    //     type: 'member',
-    //     uid: res.user.uid,
-    //     transactions: [],
-    //   }),
-    // });
+    if (!dateString.trim()) {
+      setError('Empty Date');
+      console.log(true);
+      return;
+    }
+    if (!amount.trim()) {
+      setError('Empty amount');
+      return;
+    }
+    if (!description.trim()) {
+      setError('Empty Description');
+      return;
+    }
+    if (Object.keys(category).length === 0) {
+      setError('Empty category');
+      return;
+    }
+    const docRef = doc(db, 'familyGroup', accountInfo?.code);
+
+    await updateDoc(docRef, {
+      transactions: arrayUnion({
+        uid: accountInfo.uid,
+        date: date,
+        amount: amount,
+        description: description,
+        category: {
+          id: category.id,
+          title: category.title,
+          icon: category.icon,
+          type: 'expense',
+        },
+      }),
+    });
   };
 
   const setDateTime = (date) => {
+    setDate(date);
     let hours = date.getHours();
     let minutes = date.getMinutes();
     let ampm = hours >= 12 ? 'PM' : 'AM';
@@ -62,7 +94,7 @@ const TransactionScreen = ({ navigation }) => {
     hours = hours ? hours : 12; // the hour '0' should be '12'
     minutes = minutes < 10 ? '0' + minutes : minutes;
     let strTime = hours + ':' + minutes + ' ' + ampm;
-    setDate(
+    setDateString(
       date.getMonth() +
         1 +
         '/' +
@@ -76,7 +108,6 @@ const TransactionScreen = ({ navigation }) => {
 
   useEffect(() => {
     setDateTime(new Date());
-    handleSave();
   }, []);
 
   return (
@@ -121,6 +152,7 @@ const TransactionScreen = ({ navigation }) => {
                 width: '90%',
               }}
             >
+              {error && <Text>{error}</Text>}
               <TouchableWithoutFeedback
                 onPress={() => setDatePickerVisibility(true)}
               >
@@ -129,7 +161,7 @@ const TransactionScreen = ({ navigation }) => {
                     Date and time *
                   </Text>
                   <TextInput
-                    value={date}
+                    value={dateString}
                     right={
                       <TextInput.Icon
                         icon="calendar"
@@ -195,25 +227,24 @@ const TransactionScreen = ({ navigation }) => {
                   elevation={2}
                 >
                   <ScrollView style={{ width: '100%' }}>
-                    {expenseCategories &&
-                      expenseCategories.map((expense) => (
-                        <List.Item
-                          key={expense.id}
-                          title={expense.title}
-                          left={(props) => (
-                            <List.Icon {...props} icon={expense.icon} />
-                          )}
-                          onPress={() => {
-                            setCategory(expense);
-                            handlePress();
-                          }}
-                        />
-                      ))}
+                    {expenseCategories?.map((expense) => (
+                      <List.Item
+                        key={expense.id}
+                        title={expense.title}
+                        left={(props) => (
+                          <List.Icon {...props} icon={expense.icon} />
+                        )}
+                        onPress={() => {
+                          setCategory(expense);
+                          handlePress();
+                        }}
+                      />
+                    ))}
                   </ScrollView>
                 </Surface>
               </View>
-              <Button mode="contained" onPress={() => console.log('Pressed')}>
-                Add Expense
+              <Button mode="contained" onPress={() => handleSave()}>
+                Save
               </Button>
             </View>
           </View>

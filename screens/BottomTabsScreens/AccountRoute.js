@@ -54,20 +54,27 @@ export const AccountRoute = () => {
           </Dialog.Title>
           <Dialog.ScrollArea>
             <ScrollView contentContainerStyle={{ paddingHorizontal: 5 }}>
-              {accountsInfo?.accounts?.map((item) => (
-                <Card.Title
-                  key={item.uid}
-                  title={item.name}
-                  subtitle={item.email}
-                  left={(props) => (
-                    <Avatar.Text
-                      {...props}
-                      size={24}
-                      label={item.name.slice(0, 1)}
-                    />
-                  )}
-                />
-              ))}
+              {Object.entries(accountsInfo)
+                .filter(([, value]) =>
+                  accountInfo?.type === 'provider'
+                    ? value.type === 'member'
+                    : value.type === 'provider'
+                )
+                .filter(([key]) => key !== 'transactions')
+                .map(([id, value]) => (
+                  <Card.Title
+                    key={id}
+                    title={value.name}
+                    subtitle={value.email}
+                    left={(props) => (
+                      <Avatar.Text
+                        {...props}
+                        size={24}
+                        label={value.name.slice(0, 1)}
+                      />
+                    )}
+                  />
+                ))}
             </ScrollView>
           </Dialog.ScrollArea>
           <Dialog.Actions>
@@ -78,6 +85,7 @@ export const AccountRoute = () => {
       <Avatar.Text size={80} label={currentUser?.displayName?.slice(0, 1)} />
       <Text variant="headlineLarge">{currentUser?.displayName}</Text>
       <Text variant="headlineSmall">{currentUser?.email}</Text>
+
       {accountInfo?.type === 'provider' ? (
         <>
           <Text variant="titleMedium">Family Provider</Text>
