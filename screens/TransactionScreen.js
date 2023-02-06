@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -16,11 +16,13 @@ import {
   Text,
   Surface,
   List,
+  SegmentedButtons,
 } from 'react-native-paper';
 TextInput;
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { expenseCategories } from '../Helper/CategoriesData';
+import { collection, query } from 'firebase/firestore';
 
 const TransactionScreen = ({ navigation }) => {
   const [expanded, setExpanded] = useState(false);
@@ -30,10 +32,26 @@ const TransactionScreen = ({ navigation }) => {
   const [category, setCategory] = useState({});
   const handlePress = () => setExpanded(!expanded);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  const [segmentValue, setSegmentValue] = useState('income');
 
   const handleDateConfirm = (date) => {
     setDateTime(date);
     setDatePickerVisibility(false);
+  };
+  const { accountInfo, accountsInfo } = useContext(AccountContext);
+  console.log(accountsInfo);
+  const handleSave = async () => {
+    // const familyGroup = doc(db, 'familyGroup');
+    // // update element in array
+    // await updateDoc(familyGroup, {
+    //   accounts: arrayUnion({
+    //     email: email,
+    //     name: accountName,
+    //     type: 'member',
+    //     uid: res.user.uid,
+    //     transactions: [],
+    //   }),
+    // });
   };
 
   const setDateTime = (date) => {
@@ -58,15 +76,34 @@ const TransactionScreen = ({ navigation }) => {
 
   useEffect(() => {
     setDateTime(new Date());
+    handleSave();
   }, []);
 
   return (
     <>
-      <Appbar.Header>
+      <Appbar.Header mode="medium">
         <Appbar.BackAction
           onPress={() => {
             navigation.pop();
           }}
+        />
+        <Appbar.Content
+          title={
+            <SegmentedButtons
+              value={segmentValue}
+              onValueChange={setSegmentValue}
+              buttons={[
+                {
+                  value: 'income',
+                  label: 'Money In',
+                },
+                {
+                  value: 'expense',
+                  label: 'Money Out',
+                },
+              ]}
+            />
+          }
         />
       </Appbar.Header>
       <SafeAreaProvider style={{ zIndex: -1 }}>

@@ -10,13 +10,18 @@ import {
 } from 'react-native-paper';
 import { signOut } from 'firebase/auth';
 import { auth, db } from '../../config';
-import { AuthContext, LoginContext } from '../../Helper/Context';
+import {
+  AccountContext,
+  AuthContext,
+  LoginContext,
+} from '../../Helper/Context';
 import { useContext, useEffect, useState } from 'react';
 import {
   collection,
   doc,
   getDoc,
   getDocs,
+  onSnapshot,
   query,
   where,
 } from 'firebase/firestore';
@@ -24,30 +29,9 @@ import {
 export const AccountRoute = () => {
   const { loggedIn, setLoggedIn } = useContext(LoginContext);
   const { currentUser } = useContext(AuthContext);
-  const [accountData, setAccountData] = useState({});
-  const [usersData, setUsersData] = useState(null);
-  const [showLoading, setShowLoading] = useState(false);
+  const { accountInfo, accountsInfo } = useContext(AccountContext);
   const [visible, setVisible] = useState(false);
   const hideDialog = () => setVisible(false);
-  useEffect(() => {
-    const getAccountDetails = async () => {
-      setShowLoading(true);
-      const docRef = doc(db, 'users', currentUser?.uid);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        setAccountData(docSnap.data());
-        const q = query(
-          collection(db, 'users'),
-          where('code', '==', docSnap.data().code)
-        );
-        const querySnapshot = await getDocs(q);
-        setUsersData(querySnapshot.docs.map((doc) => doc.data()));
-      }
-      setShowLoading(false);
-    };
-    getAccountDetails();
-  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -69,22 +53,21 @@ export const AccountRoute = () => {
             <Text variant="titleLarge">Family Accounts</Text>
           </Dialog.Title>
           <Dialog.ScrollArea>
-            <ScrollView contentContainerStyle={{ paddingHorizontal: 24 }}>
-              {usersData &&
-                usersData?.map((item) => (
-                  <Card.Title
-                    key={item.uid}
-                    title={item.name}
-                    subtitle={item.email}
-                    left={(props) => (
-                      <Avatar.Text
-                        {...props}
-                        size={24}
-                        label={item.name.slice(0, 1)}
-                      />
-                    )}
-                  />
-                ))}
+            <ScrollView contentContainerStyle={{ paddingHorizontal: 5 }}>
+              {accountsInfo?.accounts?.map((item) => (
+                <Card.Title
+                  key={item.uid}
+                  title={item.name}
+                  subtitle={item.email}
+                  left={(props) => (
+                    <Avatar.Text
+                      {...props}
+                      size={24}
+                      label={item.name.slice(0, 1)}
+                    />
+                  )}
+                />
+              ))}
             </ScrollView>
           </Dialog.ScrollArea>
           <Dialog.Actions>
@@ -95,23 +78,21 @@ export const AccountRoute = () => {
       <Avatar.Text size={80} label={currentUser?.displayName?.slice(0, 1)} />
       <Text variant="headlineLarge">{currentUser?.displayName}</Text>
       <Text variant="headlineSmall">{currentUser?.email}</Text>
-      {showLoading && <Text variant="titleSmall">Loading...</Text>}
-      {!showLoading &&
-        (accountData?.type === 'provider' ? (
-          <>
-            <Text variant="titleMedium">Family Provider</Text>
-            <Text variant="titleMedium">Family Code: {accountData?.code}</Text>
-            <Button
-              onPress={() => {
-                setVisible(true);
-              }}
-            >
-              Show Family Accounts
-            </Button>
-          </>
-        ) : (
-          <Text variant="titleMedium">Family Member</Text>
-        ))}
+      {accountInfo?.type === 'provider' ? (
+        <>
+          <Text variant="titleMedium">Family Provider</Text>
+          <Text variant="titleMedium">Family Code: {accountInfo?.code}</Text>
+          <Button
+            onPress={() => {
+              setVisible(true);
+            }}
+          >
+            Show Family Accounts
+          </Button>
+        </>
+      ) : (
+        <Text variant="titleMedium">Family Member</Text>
+      )}
       <Button
         mode="text"
         onPress={() => {
