@@ -34,7 +34,7 @@ import { db } from '../config';
 
 const TransactionScreen = ({ navigation }) => {
   const [expanded, setExpanded] = useState(false);
-  const [date, setDate] = useState('');
+  const [date, setDate] = useState(new Date());
   const [dateString, setDateString] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
@@ -45,7 +45,7 @@ const TransactionScreen = ({ navigation }) => {
   const [error, setError] = useState('');
 
   const handleDateConfirm = (date) => {
-    setDateTime(date);
+    formatDateAndTime(date);
     setDatePickerVisibility(false);
   };
   const { accountInfo, accountsInfo } = useContext(AccountContext);
@@ -71,6 +71,7 @@ const TransactionScreen = ({ navigation }) => {
 
     await updateDoc(docRef, {
       transactions: arrayUnion({
+        name: accountInfo.name,
         uid: accountInfo.uid,
         date: date,
         amount: amount,
@@ -85,29 +86,45 @@ const TransactionScreen = ({ navigation }) => {
     });
   };
 
-  const setDateTime = (date) => {
+  const formatDateAndTime = (date) => {
     setDate(date);
+    const monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    const monthName = monthNames[date.getMonth()];
+    const day = date.getDate();
+    const year = date.getFullYear();
+
     let hours = date.getHours();
     let minutes = date.getMinutes();
-    let ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12; // the hour '0' should be '12'
-    minutes = minutes < 10 ? '0' + minutes : minutes;
-    let strTime = hours + ':' + minutes + ' ' + ampm;
-    setDateString(
-      date.getMonth() +
-        1 +
-        '/' +
-        date.getDate() +
-        '/' +
-        date.getFullYear() +
-        ' - ' +
-        strTime
-    );
+    let ampm = 'AM';
+
+    if (hours >= 12) {
+      hours -= 12;
+      ampm = 'PM';
+    }
+    if (hours === 0) {
+      hours = 12;
+    }
+    if (minutes < 10) {
+      minutes = '0' + minutes;
+    }
+    setDateString(`${day} ${monthName} ${year} - ${hours}:${minutes} ${ampm}`);
   };
 
   useEffect(() => {
-    setDateTime(new Date());
+    formatDateAndTime(new Date());
   }, []);
 
   return (
@@ -126,11 +143,11 @@ const TransactionScreen = ({ navigation }) => {
               buttons={[
                 {
                   value: 'income',
-                  label: 'Money In',
+                  label: 'Family Budget',
                 },
                 {
                   value: 'expense',
-                  label: 'Money Out',
+                  label: 'Expense',
                 },
               ]}
             />
