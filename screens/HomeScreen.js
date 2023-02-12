@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { BottomNavigation, Text, useTheme } from 'react-native-paper';
 import { AccountRoute } from './BottomTabScreens/AccountRoute';
 import { TransactionRoute } from './BottomTabScreens/TransactionRoute';
+import BudgetRoute from './BottomTabScreens/BudgetRoute';
 
 const HomeScreen = ({ navigation }) => {
   const [index, setIndex] = useState(0);
@@ -14,6 +15,12 @@ const HomeScreen = ({ navigation }) => {
       unfocusedIcon: 'note-plus-outline',
     },
     {
+      key: 'budget',
+      title: 'Budget',
+      focusedIcon: 'notebook',
+      unfocusedIcon: 'notebook-outline',
+    },
+    {
       key: 'account',
       title: 'Account',
       focusedIcon: 'account',
@@ -23,6 +30,7 @@ const HomeScreen = ({ navigation }) => {
   const renderScene = BottomNavigation.SceneMap({
     transaction: TransactionRoute,
     account: AccountRoute,
+    budget: BudgetRoute,
   });
   const theme = useTheme();
   return (

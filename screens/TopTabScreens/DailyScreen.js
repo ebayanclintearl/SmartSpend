@@ -26,14 +26,15 @@ import {
   where,
 } from 'firebase/firestore';
 import { db } from '../../config';
+import { useNavigation } from '@react-navigation/native';
+
 const DailyScreen = () => {
+  const navigation = useNavigation();
   const { accountInfo, accountsInfo } = useContext(AccountContext);
   const [dailyDateFilter, setDailyDateFilter] = useState(new Date());
   const [totalBalance, setTotalBalance] = useState(0);
   const [totalIncome, setTotalIncome] = useState(0);
   const [totalExpense, setTotalExpense] = useState(0);
-  const [visible, setVisible] = useState(false);
-  const [transaction, setTransaction] = useState({});
 
   const filteredDailyTransactions = accountsInfo?.transactions?.filter(
     (transaction) => {
@@ -67,12 +68,6 @@ const DailyScreen = () => {
     calculateTotals();
   }, [filteredDailyTransactions]);
 
-  const showModal = (transaction) => {
-    setVisible(true);
-    setTransaction(transaction);
-  };
-  const hideModal = () => setVisible(false);
-
   const handlePreviousDay = () => {
     setDailyDateFilter(
       new Date(
@@ -101,36 +96,10 @@ const DailyScreen = () => {
     await updateDoc(docRef, {
       transactions: filteredTransactions,
     });
-    hideModal();
   };
+  console.log(accountsInfo?.transactions);
   return (
     <View style={styles.container}>
-      <Portal>
-        <Modal
-          visible={visible}
-          onDismiss={hideModal}
-          contentContainerStyle={{
-            backgroundColor: 'white',
-            alignSelf: 'center',
-            padding: 29,
-            borderRadius: 5,
-          }}
-        >
-          <Text>Name: {transaction?.name}</Text>
-          <Text>Description: {transaction?.description}</Text>
-          <Text>{formatDateAndTime(transaction?.date)}</Text>
-          <View style={{ padding: 10 }}>
-            <Button
-              mode="outlined"
-              onPress={() => {
-                removeItem(transaction.id);
-              }}
-            >
-              Remove
-            </Button>
-          </View>
-        </Modal>
-      </Portal>
       <View
         style={{
           flexDirection: 'row',
@@ -189,7 +158,9 @@ const DailyScreen = () => {
                     {transaction.amount}
                   </Text>
                 )}
-                onPress={() => showModal(transaction)}
+                onPress={() => {
+                  navigation.navigate('TransactionDetailScreen');
+                }}
               />
             );
           })}

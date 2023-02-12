@@ -34,8 +34,10 @@ import { AccountContext } from '../Helper/Context';
 import { db } from '../config';
 import { formatDateAndTime } from '../Helper/FormatFunctions';
 import uuid from 'react-native-uuid';
+import { useNavigation } from '@react-navigation/native';
 
-const TransactionScreen = ({ navigation }) => {
+const TransactionScreen = () => {
+  const navigation = useNavigation();
   const [expanded, setExpanded] = useState(false);
   const [date, setDate] = useState(new Date());
   const [dateString, setDateString] = useState('');
