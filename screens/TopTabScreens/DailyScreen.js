@@ -101,6 +101,7 @@ const DailyScreen = () => {
     await updateDoc(docRef, {
       transactions: filteredTransactions,
     });
+    hideModal();
   };
   return (
     <View style={styles.container}>
