@@ -39,3 +39,13 @@ export const expenseCategories = [
   { id: 34, title: 'Staff Salary', icon: 'account-tie' },
   { id: 35, title: 'Others', icon: 'dots-horizontal' },
 ];
+
+export const incomeCategories = [
+  { id: 1, title: 'Employment income', icon: 'briefcase-outline' },
+  { id: 2, title: 'Saving', icon: 'piggy-bank-outline' },
+  { id: 3, title: 'Investment income', icon: 'trending-up' },
+  { id: 4, title: 'Rental income', icon: 'home-outline' },
+  { id: 5, title: 'Retirement income', icon: 'bank-outline' },
+  { id: 6, title: 'Government benefits', icon: 'calculator' },
+  { id: 7, title: 'Other sources', icon: 'wallet-outline' },
+];

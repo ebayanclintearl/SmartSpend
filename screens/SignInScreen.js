@@ -13,7 +13,8 @@ const SignInScreen = ({ navigation }) => {
   const handleSignIn = async () => {
     try {
       setShowLoading(true);
-      const res = await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, email, password);
+      setShowLoading(false);
       setLoggedIn(true);
     } catch (error) {
       const errorCode = error.code;

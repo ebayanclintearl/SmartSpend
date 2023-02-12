@@ -24,9 +24,6 @@ import { db } from '../config';
 import { AccountContext } from '../Helper/Context';
 
 const TransactionHomeScreen = ({ navigation }) => {
-  const [state, setState] = useState({ open: false });
-  const onStateChange = ({ open }) => setState({ open });
-  const { open } = state;
   const { accountInfo, accountsInfo } = useContext(AccountContext);
   const [searchQuery, setSearchQuery] = useState('');
   const onChangeSearch = (query) => setSearchQuery(query);
@@ -40,8 +37,8 @@ const TransactionHomeScreen = ({ navigation }) => {
       );
     }
   );
-  const [dailyDateFilter, setDailyDateFilter] = useState(new Date());
 
+  const [dailyDateFilter, setDailyDateFilter] = useState(new Date());
   const filteredDailyTransactions = accountsInfo?.transactions?.filter(
     (transaction) => {
       const timestamp = transaction.date;
@@ -212,6 +209,7 @@ const TransactionHomeScreen = ({ navigation }) => {
         onChangeText={onChangeSearch}
         value={searchQuery}
       />
+
       {/* {filteredTransactions?.map((transaction, index) => {
         return (
           <List.Item

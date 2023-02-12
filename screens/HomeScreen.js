@@ -1,8 +1,8 @@
 import { StyleSheet, View } from 'react-native';
 import React, { useState } from 'react';
-import { BottomNavigation, Text } from 'react-native-paper';
-import { AccountRoute } from './BottomTabsScreens/AccountRoute';
-import { TransactionRoute } from './BottomTabsScreens/TransactionRoute';
+import { BottomNavigation, Text, useTheme } from 'react-native-paper';
+import { AccountRoute } from './BottomTabScreens/AccountRoute';
+import { TransactionRoute } from './BottomTabScreens/TransactionRoute';
 
 const HomeScreen = ({ navigation }) => {
   const [index, setIndex] = useState(0);
@@ -24,12 +24,14 @@ const HomeScreen = ({ navigation }) => {
     transaction: TransactionRoute,
     account: AccountRoute,
   });
+  const theme = useTheme();
   return (
     <BottomNavigation
       navigationState={{ index, routes }}
       onIndexChange={setIndex}
       renderScene={renderScene}
       shifting={true}
+      barStyle={{ backgroundColor: theme.colors.onPrimary }}
     />
   );
 };

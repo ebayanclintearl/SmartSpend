@@ -24,10 +24,8 @@ const SignUpScreen = ({ navigation }) => {
   const [errorMsg, setErrorMsg] = useState('');
 
   const handleSignUp = async () => {
-    setShowLoading(true);
     if (!famProvider) {
       if (!famCode.trim()) {
-        setShowLoading(false);
         setError(true);
         setErrorMsg('Empty Family Code');
         return;
@@ -38,31 +36,28 @@ const SignUpScreen = ({ navigation }) => {
       const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
-        setShowLoading(false);
         setError(true);
         setErrorMsg('Invalid Family Code');
         return;
       }
     }
     if (!accountName.trim()) {
-      setShowLoading(false);
       setError(true);
       setErrorMsg('Invalid Name');
       return;
     }
     if (!email.trim()) {
-      setShowLoading(false);
       setError(true);
       setErrorMsg('Invalid Email');
       return;
     }
     if (!password.trim()) {
-      setShowLoading(false);
       setError(true);
       setErrorMsg('Invalid Password');
       return;
     }
     try {
+      setShowLoading(true);
       const res = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(res.user, {
         displayName: accountName,
@@ -96,7 +91,7 @@ const SignUpScreen = ({ navigation }) => {
           },
         });
       }
-
+      setShowLoading(false);
       setLoggedIn(true);
       console.log('Done execution, sign up');
     } catch (error) {

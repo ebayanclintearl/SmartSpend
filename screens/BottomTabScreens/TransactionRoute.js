@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { createStackNavigator } from '@react-navigation/stack';
 import TransactionScreen from '../TransactionScreen';
-import TransactionHomeScreen from '../TransactionHomeScreen';
+import TransactionOverviewScreen from '../TransactionOverviewScreen';
 const Stack = createStackNavigator();
 
 export const TransactionRoute = () => {
@@ -11,7 +11,7 @@ export const TransactionRoute = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen
         name="TransactionHomeScreen"
-        component={TransactionHomeScreen}
+        component={TransactionOverviewScreen}
       />
       <Stack.Screen name="TransactionScreen" component={TransactionScreen} />
     </Stack.Navigator>

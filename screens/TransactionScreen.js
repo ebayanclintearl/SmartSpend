@@ -17,11 +17,12 @@ import {
   Surface,
   List,
   SegmentedButtons,
+  useTheme,
 } from 'react-native-paper';
 TextInput;
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { expenseCategories } from '../Helper/CategoriesData';
+import { expenseCategories, incomeCategories } from '../Helper/CategoriesData';
 import {
   arrayUnion,
   collection,
@@ -31,6 +32,8 @@ import {
 } from 'firebase/firestore';
 import { AccountContext } from '../Helper/Context';
 import { db } from '../config';
+import { formatDateAndTime } from '../Helper/FormatFunctions';
+import uuid from 'react-native-uuid';
 
 const TransactionScreen = ({ navigation }) => {
   const [expanded, setExpanded] = useState(false);
@@ -38,17 +41,31 @@ const TransactionScreen = ({ navigation }) => {
   const [dateString, setDateString] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState({});
+  const [category, setCategory] = useState({ title: 'Select Category' });
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [segmentValue, setSegmentValue] = useState('income');
-  const handlePress = () => setExpanded(!expanded);
+  const [showLoading, setShowLoading] = useState(false);
   const [error, setError] = useState('');
+  const { accountInfo, accountsInfo } = useContext(AccountContext);
+  const theme = useTheme();
+  useEffect(() => {
+    currentDateAndTime(new Date());
+    accountInfo?.type === 'member' && setSegmentValue('expense');
+  }, []);
+  useEffect(() => {
+    setCategory({ title: 'Select Category' });
+  }, [segmentValue]);
 
+  const handlePress = () => setExpanded(!expanded);
   const handleDateConfirm = (date) => {
-    formatDateAndTime(date);
+    currentDateAndTime(date);
     setDatePickerVisibility(false);
   };
-  const { accountInfo, accountsInfo } = useContext(AccountContext);
+  const currentDateAndTime = (date) => {
+    setDate(date);
+    setDateString(formatDateAndTime(null, date));
+  };
+
   const handleSave = async () => {
     if (!dateString.trim()) {
       setError('Empty Date');
@@ -63,97 +80,81 @@ const TransactionScreen = ({ navigation }) => {
       setError('Empty Description');
       return;
     }
-    if (Object.keys(category).length === 0) {
+    if (category.title === 'Select Category') {
       setError('Empty category');
       return;
     }
-    const docRef = doc(db, 'familyGroup', accountInfo?.code);
-
-    await updateDoc(docRef, {
-      transactions: arrayUnion({
-        name: accountInfo.name,
-        uid: accountInfo.uid,
-        date: date,
-        amount: amount,
-        description: description,
-        category: {
-          id: category.id,
-          title: category.title,
-          icon: category.icon,
-          type: 'expense',
-        },
-      }),
-    });
+    try {
+      setShowLoading(true);
+      const docRef = doc(db, 'familyGroup', accountInfo?.code);
+      await updateDoc(docRef, {
+        transactions: arrayUnion({
+          name: accountInfo.name,
+          id: uuid.v4(),
+          date: date,
+          amount: amount,
+          description: description,
+          type: segmentValue,
+          category: {
+            title: category.title,
+            icon: category.icon,
+          },
+        }),
+      });
+      setShowLoading(false);
+      navigation.pop();
+    } catch (error) {
+      console.log(error);
+      setShowLoading(false);
+    }
   };
 
-  const formatDateAndTime = (date) => {
-    setDate(date);
-    const monthNames = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    const monthName = monthNames[date.getMonth()];
-    const day = date.getDate();
-    const year = date.getFullYear();
-
-    let hours = date.getHours();
-    let minutes = date.getMinutes();
-    let ampm = 'AM';
-
-    if (hours >= 12) {
-      hours -= 12;
-      ampm = 'PM';
-    }
-    if (hours === 0) {
-      hours = 12;
-    }
-    if (minutes < 10) {
-      minutes = '0' + minutes;
-    }
-    setDateString(`${day} ${monthName} ${year} - ${hours}:${minutes} ${ampm}`);
-  };
-
-  useEffect(() => {
-    formatDateAndTime(new Date());
-  }, []);
+  const renderCategoryItems = (item) => (
+    <List.Item
+      key={item.id}
+      title={item.title}
+      left={(props) => <List.Icon {...props} icon={item.icon} />}
+      onPress={() => {
+        setCategory(item);
+        handlePress();
+      }}
+    />
+  );
 
   return (
     <>
-      <Appbar.Header mode="medium">
+      <Appbar.Header>
         <Appbar.BackAction
           onPress={() => {
             navigation.pop();
           }}
         />
-        <Appbar.Content
-          title={
-            <SegmentedButtons
-              value={segmentValue}
-              onValueChange={setSegmentValue}
-              buttons={[
-                {
-                  value: 'income',
-                  label: 'Family Budget',
-                },
-                {
-                  value: 'expense',
-                  label: 'Expense',
-                },
-              ]}
-            />
-          }
-        />
       </Appbar.Header>
+      {accountInfo?.type === 'provider' && (
+        <View
+          style={{
+            paddingHorizontal: 10,
+            paddingBottom: 10,
+            backgroundColor: theme.colors.onPrimary,
+          }}
+        >
+          <SegmentedButtons
+            value={segmentValue}
+            onValueChange={setSegmentValue}
+            buttons={[
+              {
+                value: 'income',
+                label: 'Family Budget',
+              },
+              {
+                value: 'expense',
+                label: 'Expense',
+              },
+            ]}
+            style={{ border: 'none' }}
+          />
+        </View>
+      )}
       <SafeAreaProvider style={{ zIndex: -1 }}>
         <DateTimePickerModal
           isVisible={isDatePickerVisible}
@@ -222,7 +223,7 @@ const TransactionScreen = ({ navigation }) => {
                 <TouchableWithoutFeedback onPress={() => handlePress()}>
                   <View style={{ width: '100%' }}>
                     <Text variant="titleSmall" style={{ fontWeight: 'bold' }}>
-                      Expense Category *
+                      Category *
                     </Text>
                     <TextInput
                       right={
@@ -244,29 +245,32 @@ const TransactionScreen = ({ navigation }) => {
                   elevation={2}
                 >
                   <ScrollView style={{ width: '100%' }}>
-                    {expenseCategories?.map((expense) => (
-                      <List.Item
-                        key={expense.id}
-                        title={expense.title}
-                        left={(props) => (
-                          <List.Icon {...props} icon={expense.icon} />
-                        )}
-                        onPress={() => {
-                          setCategory(expense);
-                          handlePress();
-                        }}
-                      />
-                    ))}
+                    {segmentValue === 'income'
+                      ? incomeCategories.map(renderCategoryItems)
+                      : expenseCategories.map(renderCategoryItems)}
                   </ScrollView>
                 </Surface>
               </View>
-              <Button mode="contained" onPress={() => handleSave()}>
-                Save
-              </Button>
             </View>
           </View>
         </ScrollView>
       </SafeAreaProvider>
+      <View
+        style={{
+          padding: 10,
+          backgroundColor: theme.colors.inverseOnSurface,
+        }}
+      >
+        <Button
+          mode="contained"
+          compact={true}
+          loading={showLoading}
+          buttonColor={segmentValue === 'income' ? '#028a0f' : '#a91b0d'}
+          onPress={() => handleSave()}
+        >
+          Save
+        </Button>
+      </View>
     </>
   );
 };
