@@ -36,19 +36,24 @@ const DailyScreen = () => {
   const [totalIncome, setTotalIncome] = useState(0);
   const [totalExpense, setTotalExpense] = useState(0);
 
-  const filteredDailyTransactions = accountsInfo?.transactions?.filter(
-    (transaction) => {
+  const filteredDailyTransactions = (
+    accountsInfo?.transactions && Object.entries(accountsInfo.transactions)
+  )
+    ?.filter(([key, transaction]) => {
       const timestamp = transaction.date;
       const timestampMilliseconds =
         timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000;
       const transactionDate = new Date(timestampMilliseconds);
+
       return (
         transactionDate.getDate() === dailyDateFilter.getDate() &&
         transactionDate.getMonth() === dailyDateFilter.getMonth() &&
         transactionDate.getFullYear() === dailyDateFilter.getFullYear()
       );
-    }
-  );
+    })
+    .map(([key, transaction]) => {
+      return { id: key, ...transaction };
+    });
 
   useEffect(() => {
     const calculateTotals = () => {
@@ -88,16 +93,6 @@ const DailyScreen = () => {
     );
   };
 
-  const removeItem = async (id) => {
-    const filteredTransactions = accountsInfo?.transactions.filter(
-      (transaction) => transaction.id !== id
-    );
-    const docRef = doc(db, 'familyGroup', accountInfo?.code);
-    await updateDoc(docRef, {
-      transactions: filteredTransactions,
-    });
-  };
-  console.log(accountsInfo?.transactions);
   return (
     <View style={styles.container}>
       <View
@@ -159,7 +154,9 @@ const DailyScreen = () => {
                   </Text>
                 )}
                 onPress={() => {
-                  navigation.navigate('TransactionDetailScreen');
+                  navigation.navigate('TransactionDetailScreen', {
+                    transactionID: transaction.id,
+                  });
                 }}
               />
             );

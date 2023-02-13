@@ -18,6 +18,7 @@ import {
   List,
   SegmentedButtons,
   useTheme,
+  HelperText,
 } from 'react-native-paper';
 TextInput;
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -28,6 +29,7 @@ import {
   collection,
   doc,
   query,
+  setDoc,
   updateDoc,
 } from 'firebase/firestore';
 import { AccountContext } from '../Helper/Context';
@@ -35,9 +37,11 @@ import { db } from '../config';
 import { formatDateAndTime } from '../Helper/FormatFunctions';
 import uuid from 'react-native-uuid';
 import { useNavigation } from '@react-navigation/native';
+import { validateTransactionInputs } from '../Helper/Validation';
 
-const TransactionScreen = () => {
+const TransactionScreen = ({ route }) => {
   const navigation = useNavigation();
+  const { transactionID } = route.params || {};
   const [expanded, setExpanded] = useState(false);
   const [date, setDate] = useState(new Date());
   const [dateString, setDateString] = useState('');
@@ -47,11 +51,20 @@ const TransactionScreen = () => {
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [segmentValue, setSegmentValue] = useState('income');
   const [showLoading, setShowLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState({
+    errorMessage: '',
+    errorDateString: false,
+    errorAmount: false,
+    errorDescription: false,
+    errorCategory: false,
+  });
+
   const { accountInfo, accountsInfo } = useContext(AccountContext);
   const theme = useTheme();
+
   useEffect(() => {
     currentDateAndTime(new Date());
+    console.log(transactionID);
     accountInfo?.type === 'member' && setSegmentValue('expense');
   }, []);
   useEffect(() => {
@@ -69,44 +82,45 @@ const TransactionScreen = () => {
   };
 
   const handleSave = async () => {
-    if (!dateString.trim()) {
-      setError('Empty Date');
-      console.log(true);
-      return;
-    }
-    if (!amount.trim()) {
-      setError('Empty amount');
-      return;
-    }
-    if (!description.trim()) {
-      setError('Empty Description');
-      return;
-    }
-    if (category.title === 'Select Category') {
-      setError('Empty category');
-      return;
-    }
+    const validationResult = validateTransactionInputs(
+      dateString,
+      amount,
+      description,
+      category
+    );
+    setError(validationResult);
+    if (validationResult.errorMessage) return;
+
     try {
       setShowLoading(true);
       const docRef = doc(db, 'familyGroup', accountInfo?.code);
-      await updateDoc(docRef, {
-        transactions: arrayUnion({
-          name: accountInfo.name,
-          id: uuid.v4(),
-          date: date,
-          amount: amount,
-          description: description,
-          type: segmentValue,
-          category: {
-            title: category.title,
-            icon: category.icon,
+
+      const transaction = {
+        name: accountInfo.name,
+        date: date,
+        amount: amount,
+        description: description,
+        type: segmentValue,
+        category: {
+          title: category.title,
+          icon: category.icon,
+        },
+      };
+
+      setDoc(
+        docRef,
+        {
+          transactions: {
+            [uuid.v4()]: transaction,
           },
-        }),
-      });
+        },
+        { merge: true }
+      );
+
       setShowLoading(false);
       navigation.pop();
     } catch (error) {
-      console.log(error);
+      console.error(error);
       setShowLoading(false);
     }
   };
@@ -172,7 +186,6 @@ const TransactionScreen = () => {
                 width: '90%',
               }}
             >
-              {error && <Text>{error}</Text>}
               <TouchableWithoutFeedback
                 onPress={() => setDatePickerVisibility(true)}
               >
@@ -192,12 +205,18 @@ const TransactionScreen = () => {
                   />
                 </View>
               </TouchableWithoutFeedback>
+              {error.errorDateString && (
+                <HelperText type="error" visible={error.errorDateString}>
+                  {error.errorMessage}
+                </HelperText>
+              )}
 
               <Text variant="titleSmall" style={{ fontWeight: 'bold' }}>
                 Amount *
               </Text>
               <TextInput
                 value={amount}
+                error={error.errorAmount}
                 style={{ width: '100%' }}
                 onChangeText={(amount) => setAmount(amount)}
                 render={(props) => (
@@ -210,6 +229,12 @@ const TransactionScreen = () => {
                   />
                 }
               />
+              {error.errorAmount && (
+                <HelperText type="error" visible={error.errorAmount}>
+                  {error.errorMessage}
+                </HelperText>
+              )}
+
               <Text variant="titleSmall" style={{ fontWeight: 'bold' }}>
                 Description *
               </Text>
@@ -221,6 +246,12 @@ const TransactionScreen = () => {
                   <TextInput.Icon icon="note" forceTextInputFocus={false} />
                 }
               />
+              {error.errorDescription && (
+                <HelperText type="error" visible={error.errorDescription}>
+                  {error.errorMessage}
+                </HelperText>
+              )}
+
               <View style={{ alignItems: 'center' }}>
                 <TouchableWithoutFeedback onPress={() => handlePress()}>
                   <View style={{ width: '100%' }}>
@@ -239,6 +270,11 @@ const TransactionScreen = () => {
                     />
                   </View>
                 </TouchableWithoutFeedback>
+                {error.errorCategory && (
+                  <HelperText type="error" visible={error.errorCategory}>
+                    {error.errorMessage}
+                  </HelperText>
+                )}
                 <Surface
                   style={[
                     styles.surface,

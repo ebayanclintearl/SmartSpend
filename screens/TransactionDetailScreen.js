@@ -1,14 +1,68 @@
-import { StyleSheet, Text, View } from 'react-native';
-import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import React, { useContext, useState } from 'react';
+import { AccountContext } from '../Helper/Context';
+import { Appbar, Button, Text } from 'react-native-paper';
+import { formatCurrency, formatDateAndTime } from '../Helper/FormatFunctions';
+import { useNavigation } from '@react-navigation/native';
+import { deleteField, doc, updateDoc } from 'firebase/firestore';
+import { db } from '../config';
 
-const TransactionDetailScreen = () => {
+const TransactionDetailScreen = ({ route }) => {
+  const navigation = useNavigation();
+  const { transactionID } = route.params;
+  const { accountInfo, accountsInfo } = useContext(AccountContext);
+  const transactionInfo = accountsInfo?.transactions[transactionID];
+  const [accountName, setAccountName] = useState(transactionInfo?.name);
+  const [date, setDate] = useState(transactionInfo?.date);
+  const [amount, setAmount] = useState(transactionInfo?.amount);
+  const [description, setDescription] = useState(transactionInfo?.description);
+  const [category, setCategory] = useState(transactionInfo?.category?.title);
+  const handleRemove = async () => {
+    const docRef = doc(db, 'familyGroup', accountInfo?.code);
+    await updateDoc(docRef, {
+      ['transactions.' + transactionID]: deleteField(),
+    });
+    navigation.pop();
+  };
   return (
-    <View>
-      <Text>TransactionDetailScreen</Text>
-    </View>
+    <>
+      <Appbar.Header>
+        <Appbar.BackAction
+          onPress={() => {
+            navigation.pop();
+          }}
+        />
+      </Appbar.Header>
+      <View style={styles.container}>
+        <Text>Name {accountName}</Text>
+        <Text>Transaction Date {formatDateAndTime(date)}</Text>
+        <Text>Amount {formatCurrency(parseInt(amount))}</Text>
+        <Text>Description {description}</Text>
+        <Text>Category {category}</Text>
+        <Button mode="contained" onPress={() => handleRemove()}>
+          Remove
+        </Button>
+        <Button
+          mode="contained"
+          onPress={() =>
+            navigation.navigate('TransactionScreen', {
+              transactionID: transactionID,
+            })
+          }
+        >
+          Edit
+        </Button>
+      </View>
+    </>
   );
 };
 
 export default TransactionDetailScreen;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
