@@ -16,8 +16,12 @@ const PeriodicalScreen = () => {
     <>
       <Appbar.Header>
         <Appbar.Content title="Title" />
-        <Appbar.Action icon="calendar" onPress={() => {}} />
-        <Appbar.Action icon="magnify" onPress={() => {}} />
+        <Appbar.Action
+          icon="magnify"
+          onPress={() => {
+            navigation.navigate('SearchScreen');
+          }}
+        />
       </Appbar.Header>
       <View style={styles.container}>
         <Tab.Navigator

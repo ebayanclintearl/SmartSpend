@@ -41,13 +41,13 @@ import { validateTransactionInputs } from '../Helper/Validation';
 
 const TransactionScreen = ({ route }) => {
   const navigation = useNavigation();
-  const { transactionID } = route.params || {};
+  const transactionID = route.params ? route.params.transactionID : null;
   const [expanded, setExpanded] = useState(false);
   const [date, setDate] = useState(new Date());
   const [dateString, setDateString] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState({ title: 'Select Category' });
+  const [category, setCategory] = useState(null);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [segmentValue, setSegmentValue] = useState('income');
   const [showLoading, setShowLoading] = useState(false);
@@ -58,27 +58,37 @@ const TransactionScreen = ({ route }) => {
     errorDescription: false,
     errorCategory: false,
   });
-
   const { accountInfo, accountsInfo } = useContext(AccountContext);
   const theme = useTheme();
 
   useEffect(() => {
-    currentDateAndTime(new Date());
-    console.log(transactionID);
+    if (transactionID) {
+      const transactionInfo = accountsInfo?.transactions[transactionID];
+      const { date, amount, description, category, type } = transactionInfo;
+      currentDateAndTime(date.toDate());
+      setAmount(amount);
+      setDescription(description);
+      setCategory(category);
+      setSegmentValue(type);
+    } else {
+      currentDateAndTime(new Date());
+    }
     accountInfo?.type === 'member' && setSegmentValue('expense');
   }, []);
+
   useEffect(() => {
-    setCategory({ title: 'Select Category' });
+    if (transactionID) return;
+    setCategory(null);
   }, [segmentValue]);
 
-  const handlePress = () => setExpanded(!expanded);
+  const handleCategoryPress = () => setExpanded(!expanded);
   const handleDateConfirm = (date) => {
-    currentDateAndTime(date);
     setDatePickerVisibility(false);
+    currentDateAndTime(date);
   };
   const currentDateAndTime = (date) => {
+    setDateString(formatDateAndTime(date));
     setDate(date);
-    setDateString(formatDateAndTime(null, date));
   };
 
   const handleSave = async () => {
@@ -100,6 +110,7 @@ const TransactionScreen = ({ route }) => {
         date: date,
         amount: amount,
         description: description,
+        accountType: accountInfo.type,
         type: segmentValue,
         category: {
           title: category.title,
@@ -107,15 +118,21 @@ const TransactionScreen = ({ route }) => {
         },
       };
 
-      setDoc(
-        docRef,
-        {
-          transactions: {
-            [uuid.v4()]: transaction,
+      if (transactionID) {
+        await updateDoc(docRef, {
+          transactions: { [transactionID]: transaction },
+        });
+      } else {
+        setDoc(
+          docRef,
+          {
+            transactions: {
+              [uuid.v4()]: transaction,
+            },
           },
-        },
-        { merge: true }
-      );
+          { merge: true }
+        );
+      }
 
       setShowLoading(false);
       navigation.pop();
@@ -132,11 +149,10 @@ const TransactionScreen = ({ route }) => {
       left={(props) => <List.Icon {...props} icon={item.icon} />}
       onPress={() => {
         setCategory(item);
-        handlePress();
+        handleCategoryPress();
       }}
     />
   );
-
   return (
     <>
       <Appbar.Header>
@@ -146,33 +162,45 @@ const TransactionScreen = ({ route }) => {
           }}
         />
       </Appbar.Header>
-      {accountInfo?.type === 'provider' && (
-        <View
-          style={{
-            paddingHorizontal: 10,
-            paddingBottom: 10,
-            backgroundColor: theme.colors.onPrimary,
-          }}
-        >
-          <SegmentedButtons
-            value={segmentValue}
-            onValueChange={setSegmentValue}
-            buttons={[
-              {
-                value: 'income',
-                label: 'Family Budget',
-              },
-              {
-                value: 'expense',
-                label: 'Expense',
-              },
-            ]}
-            style={{ border: 'none' }}
-          />
-        </View>
-      )}
+
+      <View
+        style={{
+          paddingHorizontal: 10,
+          paddingBottom: 10,
+          backgroundColor: theme.colors.onPrimary,
+        }}
+      >
+        <SegmentedButtons
+          value={segmentValue}
+          onValueChange={setSegmentValue}
+          buttons={[
+            {
+              value: 'income',
+              label: 'Family Budget',
+              disabled: transactionID
+                ? segmentValue === 'income'
+                  ? false
+                  : true
+                : accountInfo?.type === 'member'
+                ? true
+                : false,
+            },
+            {
+              value: 'expense',
+              label: 'Expense',
+              disabled: transactionID
+                ? segmentValue === 'income'
+                  ? true
+                  : false
+                : false,
+            },
+          ]}
+          style={{ border: 'none' }}
+        />
+      </View>
       <SafeAreaProvider style={{ zIndex: -1 }}>
         <DateTimePickerModal
+          date={date}
           isVisible={isDatePickerVisible}
           mode="datetime"
           onConfirm={handleDateConfirm}
@@ -195,13 +223,13 @@ const TransactionScreen = ({ route }) => {
                   </Text>
                   <TextInput
                     value={dateString}
+                    editable={false}
                     right={
                       <TextInput.Icon
                         icon="calendar"
                         forceTextInputFocus={false}
                       />
                     }
-                    editable={false}
                   />
                 </View>
               </TouchableWithoutFeedback>
@@ -240,6 +268,7 @@ const TransactionScreen = ({ route }) => {
               </Text>
               <TextInput
                 value={description}
+                error={error.errorDescription}
                 style={{ width: '100%' }}
                 onChangeText={(description) => setDescription(description)}
                 right={
@@ -253,20 +282,21 @@ const TransactionScreen = ({ route }) => {
               )}
 
               <View style={{ alignItems: 'center' }}>
-                <TouchableWithoutFeedback onPress={() => handlePress()}>
+                <TouchableWithoutFeedback onPress={() => handleCategoryPress()}>
                   <View style={{ width: '100%' }}>
                     <Text variant="titleSmall" style={{ fontWeight: 'bold' }}>
                       Category *
                     </Text>
                     <TextInput
+                      value={category ? category.title : 'Select Category'}
+                      error={error.errorCategory}
+                      editable={false}
                       right={
                         <TextInput.Icon
                           icon="chevron-down-box-outline"
                           forceTextInputFocus={false}
                         />
                       }
-                      value={category.title}
-                      editable={false}
                     />
                   </View>
                 </TouchableWithoutFeedback>

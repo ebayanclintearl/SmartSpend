@@ -17,21 +17,12 @@ export const formatDate = (date) => {
     date.getDate() + ' ' + months[date.getMonth()] + ' ' + date.getFullYear()
   );
 };
-export const formatDateAndTime = (timestamp = null, date = null) => {
-  let formattedDate;
-
-  if (!timestamp && !date) {
-    return 'Timestamp or date is required';
-  }
-
-  if (timestamp) {
-    let timestampInMilliseconds =
-      timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000;
-    formattedDate = new Date(timestampInMilliseconds);
-  } else {
-    formattedDate = new Date(date);
-  }
-
+export const timestampToDate = (timestamp) => {
+  const timestampMilliseconds =
+    timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000;
+  return new Date(timestampMilliseconds);
+};
+export const formatDateAndTime = (date) => {
   const monthNames = [
     'January',
     'February',
@@ -46,12 +37,12 @@ export const formatDateAndTime = (timestamp = null, date = null) => {
     'November',
     'December',
   ];
-  const monthName = monthNames[formattedDate.getMonth()];
-  const day = formattedDate.getDate();
-  const year = formattedDate.getFullYear();
+  const monthName = monthNames[date.getMonth()];
+  const day = date.getDate();
+  const year = date.getFullYear();
 
-  let hours = formattedDate.getHours();
-  let minutes = formattedDate.getMinutes();
+  let hours = date.getHours();
+  let minutes = date.getMinutes();
   let ampm = 'AM';
 
   if (hours >= 12) {

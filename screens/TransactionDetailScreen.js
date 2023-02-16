@@ -35,7 +35,7 @@ const TransactionDetailScreen = ({ route }) => {
       </Appbar.Header>
       <View style={styles.container}>
         <Text>Name {accountName}</Text>
-        <Text>Transaction Date {formatDateAndTime(date)}</Text>
+        <Text>Transaction Date {formatDateAndTime(date.toDate())}</Text>
         <Text>Amount {formatCurrency(parseInt(amount))}</Text>
         <Text>Description {description}</Text>
         <Text>Category {category}</Text>

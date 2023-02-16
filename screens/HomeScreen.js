@@ -5,7 +5,7 @@ import { AccountRoute } from './BottomTabScreens/AccountRoute';
 import { TransactionRoute } from './BottomTabScreens/TransactionRoute';
 import BudgetRoute from './BottomTabScreens/BudgetRoute';
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = () => {
   const [index, setIndex] = useState(0);
   const [routes] = useState([
     {

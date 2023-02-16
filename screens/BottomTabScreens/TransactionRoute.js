@@ -5,6 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import PeriodicalScreen from '../PeriodicalScreen';
 import TransactionScreen from '../TransactionScreen';
 import TransactionDetailScreen from '../TransactionDetailScreen';
+import SearchScreen from '../SearchScreen';
 const Stack = createStackNavigator();
 
 export const TransactionRoute = () => {
@@ -16,6 +17,7 @@ export const TransactionRoute = () => {
         name="TransactionDetailScreen"
         component={TransactionDetailScreen}
       />
+      <Stack.Screen name="SearchScreen" component={SearchScreen} />
     </Stack.Navigator>
   );
 };

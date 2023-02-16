@@ -10,11 +10,7 @@ import {
   Text,
 } from 'react-native-paper';
 import { AccountContext } from '../../Helper/Context';
-import {
-  formatCurrency,
-  formatDate,
-  formatDateAndTime,
-} from '../../Helper/FormatFunctions';
+import { formatCurrency, formatDate } from '../../Helper/FormatFunctions';
 import { ScrollView } from 'react-native-gesture-handler';
 import {
   arrayRemove,
@@ -40,10 +36,7 @@ const DailyScreen = () => {
     accountsInfo?.transactions && Object.entries(accountsInfo.transactions)
   )
     ?.filter(([key, transaction]) => {
-      const timestamp = transaction.date;
-      const timestampMilliseconds =
-        timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000;
-      const transactionDate = new Date(timestampMilliseconds);
+      const transactionDate = transaction.date.toDate();
 
       return (
         transactionDate.getDate() === dailyDateFilter.getDate() &&
@@ -53,6 +46,18 @@ const DailyScreen = () => {
     })
     .map(([key, transaction]) => {
       return { id: key, ...transaction };
+    })
+    .filter((transaction) => {
+      if (accountInfo.type === 'provider') {
+        return (
+          transaction.accountType === 'provider' ||
+          transaction.accountType === 'member'
+        );
+      } else if (accountInfo.type === 'member') {
+        return transaction.accountType === 'member';
+      } else {
+        return true; // show all transactions if user account type is not recognized
+      }
     });
 
   useEffect(() => {
