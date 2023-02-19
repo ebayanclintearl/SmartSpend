@@ -20,7 +20,7 @@ export const validateTransactionInputs = (
       errorDescription: false,
       errorCategory: false,
     };
-  } else if (!/^\d+(\.\d{1,2})?$/.test(amount)) {
+  } else if (!/^\d{1,3}(,\d{3})*(\.\d{1,2})?$/.test(amount)) {
     return {
       errorMessage:
         'Amount should be a valid number without any other characters',

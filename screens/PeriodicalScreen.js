@@ -29,6 +29,7 @@ const PeriodicalScreen = () => {
             tabBarPressColor: 'transparent',
             tabBarStyle: { elevation: 0 },
           }}
+          initialRouteName="Monthly"
         >
           <Tab.Screen name="Daily" component={DailyScreen} />
           <Tab.Screen name="Weekly" component={WeeklyScreen} />

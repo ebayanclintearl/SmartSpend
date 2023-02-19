@@ -20,7 +20,6 @@ import {
   useTheme,
   HelperText,
 } from 'react-native-paper';
-TextInput;
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { expenseCategories, incomeCategories } from '../Helper/CategoriesData';
@@ -34,7 +33,10 @@ import {
 } from 'firebase/firestore';
 import { AccountContext } from '../Helper/Context';
 import { db } from '../config';
-import { formatDateAndTime } from '../Helper/FormatFunctions';
+import {
+  formatDateAndTime,
+  handleAmountChange,
+} from '../Helper/FormatFunctions';
 import uuid from 'react-native-uuid';
 import { useNavigation } from '@react-navigation/native';
 import { validateTransactionInputs } from '../Helper/Validation';
@@ -42,12 +44,12 @@ import { validateTransactionInputs } from '../Helper/Validation';
 const TransactionScreen = ({ route }) => {
   const navigation = useNavigation();
   const transactionID = route.params ? route.params.transactionID : null;
-  const [expanded, setExpanded] = useState(false);
   const [date, setDate] = useState(new Date());
   const [dateString, setDateString] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState(null);
+  const [expanded, setExpanded] = useState(false);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [segmentValue, setSegmentValue] = useState('income');
   const [showLoading, setShowLoading] = useState(false);
@@ -120,7 +122,7 @@ const TransactionScreen = ({ route }) => {
 
       if (transactionID) {
         await updateDoc(docRef, {
-          transactions: { [transactionID]: transaction },
+          ['transactions.' + transactionID]: transaction,
         });
       } else {
         setDoc(
@@ -246,7 +248,7 @@ const TransactionScreen = ({ route }) => {
                 value={amount}
                 error={error.errorAmount}
                 style={{ width: '100%' }}
-                onChangeText={(amount) => setAmount(amount)}
+                onChangeText={(value) => handleAmountChange(value, setAmount)}
                 render={(props) => (
                   <NativeTextInput {...props} keyboardType={'numeric'} />
                 )}

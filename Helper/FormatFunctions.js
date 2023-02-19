@@ -17,11 +17,6 @@ export const formatDate = (date) => {
     date.getDate() + ' ' + months[date.getMonth()] + ' ' + date.getFullYear()
   );
 };
-export const timestampToDate = (timestamp) => {
-  const timestampMilliseconds =
-    timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000;
-  return new Date(timestampMilliseconds);
-};
 export const formatDateAndTime = (date) => {
   const monthNames = [
     'January',
@@ -59,5 +54,54 @@ export const formatDateAndTime = (date) => {
   return `${monthName} ${day}, ${year} - ${hours}:${minutes} ${ampm}`;
 };
 export const formatCurrency = (amount) => {
-  return amount?.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return amount
+    ?.toFixed(2)
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    .replace(/\s/g, '');
+};
+
+export const handleAmountChange = (value, setAmount) => {
+  // Remove all non-numeric characters from the input
+  const numericValue = value.replace(/[^0-9]/g, '');
+
+  // Check that the numeric value does not exceed 100 trillion
+  const numericLimit = 100_000_000_000;
+  if (parseInt(numericValue) > numericLimit) {
+    // Exit the function without updating the state
+    return;
+  }
+
+  // Format the numeric value with commas
+  let formattedValue = '';
+  if (numericValue.length >= 10) {
+    // Format for billions
+    const billions = parseInt(numericValue.slice(0, -9));
+    const millions = parseInt(numericValue.slice(-9, -6));
+    const thousands = parseInt(numericValue.slice(-6, -3));
+    const ones = parseInt(numericValue.slice(-3));
+    formattedValue = `${billions},${millions
+      .toString()
+      .padStart(3, '0')},${thousands.toString().padStart(3, '0')},${ones
+      .toString()
+      .padStart(3, '0')}`;
+  } else if (numericValue.length >= 7) {
+    // Format for millions
+    const millions = parseInt(numericValue.slice(0, -6));
+    const thousands = parseInt(numericValue.slice(-6, -3));
+    const ones = parseInt(numericValue.slice(-3));
+    formattedValue = `${millions},${thousands
+      .toString()
+      .padStart(3, '0')},${ones.toString().padStart(3, '0')}`;
+  } else if (numericValue.length >= 4) {
+    // Format for thousands
+    const thousands = parseInt(numericValue.slice(0, -3));
+    const ones = parseInt(numericValue.slice(-3));
+    formattedValue = `${thousands},${ones.toString().padStart(3, '0')}`;
+  } else {
+    // No formatting needed
+    formattedValue = numericValue;
+  }
+
+  // Update the state with the formatted value
+  setAmount(formattedValue);
 };

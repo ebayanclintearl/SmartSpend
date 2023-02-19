@@ -64,13 +64,22 @@ const DailyScreen = () => {
     const calculateTotals = () => {
       const income = filteredDailyTransactions
         ?.filter((transaction) => transaction.type === 'income')
-        .reduce((prev, curr) => prev + parseInt(curr.amount), 0);
+        .reduce(
+          (prev, curr) =>
+            prev + parseInt(curr.amount.replace(/[^0-9]/g, '').trim()),
+          0
+        );
       setTotalIncome(income);
 
       const expense = filteredDailyTransactions
         ?.filter((transaction) => transaction.type === 'expense')
-        .reduce((prev, curr) => prev + parseInt(curr.amount), 0);
+        .reduce(
+          (prev, curr) =>
+            prev + parseInt(curr.amount.replace(/[^0-9]/g, '').trim()),
+          0
+        );
       setTotalExpense(expense);
+
       const balance = totalIncome - totalExpense;
       setTotalBalance(balance);
     };
@@ -124,14 +133,14 @@ const DailyScreen = () => {
       </View>
       <Card>
         <Card.Content>
-          <Text variant="titleMedium">
-            Balance: {`PHP ${formatCurrency(totalBalance)}`}
+          <Text variant="titleSmall">
+            Balance: PHP {formatCurrency(totalBalance)}
           </Text>
-          <Text variant="titleMedium">
-            Budget: {`PHP ${formatCurrency(totalIncome)}`}
+          <Text variant="titleSmall">
+            Income: PHP {formatCurrency(totalIncome)}
           </Text>
-          <Text variant="titleMedium">
-            Expense: {`PHP ${formatCurrency(totalExpense)}`}
+          <Text variant="titleSmall">
+            Expense: PHP {formatCurrency(totalExpense)}
           </Text>
         </Card.Content>
       </Card>

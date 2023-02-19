@@ -52,6 +52,7 @@ const SignUpScreen = ({ navigation }) => {
       try {
         const validFamilyCode = await validateFamilyCode(familyCode);
         if (!validFamilyCode) {
+          setShowLoading(false);
           setError({
             errorMessage: 'Invalid Family Code',
             errorAccountName: false,
