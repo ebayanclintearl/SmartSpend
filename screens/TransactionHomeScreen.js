@@ -93,11 +93,7 @@ const TransactionHomeScreen = ({ navigation }) => {
   );
   const handlePreviousWeek = () => {
     setWeeklyDateFilter(
-      new Date(
-        weeklyDateFilter.getFullYear(),
-        weeklyDateFilter.getMonth(),
-        weeklyDateFilter.getDate() - 7
-      )
+      new Date(weeklyDateFilter.getTime() - 7 * 24 * 60 * 60 * 1000)
     );
   };
 

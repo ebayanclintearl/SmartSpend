@@ -62,6 +62,70 @@ export const validateTransactionInputs = (
     errorCategory: false,
   };
 };
+export const validateBudgetInputs = (
+  budgetName,
+  amount,
+  dateRange,
+  category
+) => {
+  if (!budgetName.trim()) {
+    return {
+      errorMessage: 'Empty Budget Name',
+      errorBudgetName: true,
+      errorAmount: false,
+      errorDateRange: false,
+      errorCategory: false,
+    };
+  } else if (budgetName.trim().length > 30) {
+    return {
+      errorMessage: 'Budget name should not exceed 30 characters',
+      errorBudgetName: true,
+      errorAmount: false,
+      errorDateRange: false,
+      errorCategory: false,
+    };
+  } else if (!amount.trim()) {
+    return {
+      errorMessage: 'Empty amount',
+      errorBudgetName: false,
+      errorAmount: true,
+      errorDateRange: false,
+      errorCategory: false,
+    };
+  } else if (!/^\d{1,3}(,\d{3})*(\.\d{1,2})?$/.test(amount)) {
+    return {
+      errorMessage:
+        'Amount should be a valid number without any other characters',
+      errorBudgetName: false,
+      errorAmount: true,
+      errorDateRange: false,
+      errorCategory: false,
+    };
+  } else if (!dateRange.trim()) {
+    return {
+      errorMessage: 'Empty Date Range',
+      errorBudgetName: false,
+      errorAmount: false,
+      errorDateRange: true,
+      errorCategory: false,
+    };
+  } else if (category === null) {
+    return {
+      errorMessage: 'Empty category',
+      errorBudgetName: false,
+      errorAmount: false,
+      errorDateRange: false,
+      errorCategory: true,
+    };
+  }
+  return {
+    errorMessage: '',
+    errorBudgetName: false,
+    errorAmount: false,
+    errorDateRange: false,
+    errorCategory: false,
+  };
+};
 
 export const validateSignUpInputs = (
   accountName,

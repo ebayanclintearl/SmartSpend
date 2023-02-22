@@ -40,7 +40,7 @@ const HomeScreen = () => {
       renderScene={renderScene}
       shifting={true}
       barStyle={{ backgroundColor: theme.colors.onPrimary }}
-      keyboardHidesNavigationBar={false}
+      keyboardHidesNavigationBar={true}
     />
   );
 };
