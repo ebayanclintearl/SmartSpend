@@ -21,6 +21,9 @@ import {
   HelperText,
   Surface,
   List,
+  Card,
+  Divider,
+  ProgressBar,
 } from 'react-native-paper';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import {
@@ -117,6 +120,27 @@ const BudgetRoute = () => {
     }
   };
 
+  const handleSuggest = async () => {
+    try {
+      setShowLoading(true);
+      const docRef = doc(db, 'familyGroup', accountInfo?.code);
+      const budgetList = await createCategoryBudgets(accountsInfo, 100);
+      setDoc(
+        docRef,
+        {
+          budgets: budgetList,
+        },
+        { merge: true }
+      );
+
+      setShowLoading(false);
+      handleClosePress();
+    } catch (error) {
+      console.error(error);
+      setShowLoading(false);
+    }
+  };
+
   function getDateRange(dateRange) {
     const date = new Date(); // Get the current date
     let startDate, endDate;
@@ -164,19 +188,20 @@ const BudgetRoute = () => {
     const startDate = budget.dateRangeStart.toDate();
     const endDate = budget.dateRangeEnd.toDate();
 
-    return Object.entries(transactions).filter(([key, { date }]) => {
+    return Object.entries(transactions)?.filter(([key, { date, category }]) => {
       const transactionDate = date.toDate();
       return (
         transactionDate >= startDate &&
         transactionDate <= endDate &&
-        budget.dateRange === timeRange
+        budget.dateRange === timeRange &&
+        category.title === budget.category.title
       );
     });
   }
 
   // Compute the budget summary for a given time range
   function computeBudgetSummary(timeRange) {
-    const filteredBudgets = Object.entries(budgets).filter(
+    const filteredBudgets = Object.entries(budgets)?.filter(
       ([_, { dateRange }]) => dateRange === timeRange
     );
 
@@ -194,58 +219,124 @@ const BudgetRoute = () => {
       );
       const percentage = Math.min(totalAmount / budgetAmount, 1);
       budgetSummary.push({
-        budgetId: key,
+        budgetID: key,
         budgetName,
-        category: category.title,
+        budgetCategory: category.title,
         budgetAmount,
         totalAmount: totalAmount.toFixed(2),
-        percentage: percentage.toFixed(2),
+        percentage: parseFloat(percentage.toFixed(2)),
         budgetStartDate: budget.dateRangeStart.toDate(),
         budgetEndDate: budget.dateRangeEnd.toDate(),
       });
+      if (percentage >= 1) {
+        console.log('Alert Budget reach the limit');
+      }
+
       return budgetSummary;
     }, []);
   }
-
   const budgetSummaryForDay = computeBudgetSummary('day');
   const budgetSummaryForWeek = computeBudgetSummary('week');
   const budgetSummaryForMonth = computeBudgetSummary('month');
 
-  console.log(`\nBudget Summary for Day:\n`);
-  budgetSummaryForDay.forEach((summary) => {
-    console.log(`Budget ID: ${summary.budgetId}`);
-    console.log(`Budget: ${summary.budgetName}`);
-    console.log(`Category: ${summary.category}`);
-    console.log(`Budget amount: $${summary.budgetAmount}`);
-    console.log(`Total amount: $${summary.totalAmount}`);
-    console.log(`Percentage used: ${summary.percentage}\n`);
-    console.log(`Budget Start Date: ${summary.budgetStartDate}`);
-    console.log(`Budget End Date: ${summary.budgetEndDate}`);
-  });
+  function getCategoryStatistics(accountsInfo, budget) {
+    // If accountsInfo is undefined, return an empty object
+    if (!accountsInfo) {
+      return { distributed: {} };
+    }
 
-  console.log(`\nBudget Summary for Week:\n`);
-  budgetSummaryForWeek.forEach((summary) => {
-    console.log(`Budget ID: ${summary.budgetId}`);
-    console.log(`Budget: ${summary.budgetName}`);
-    console.log(`Category: ${summary.category}`);
-    console.log(`Budget amount: $${summary.budgetAmount}`);
-    console.log(`Total amount: $${summary.totalAmount}`);
-    console.log(`Percentage used: ${summary.percentage}\n`);
-    console.log(`Budget Start Date: ${summary.budgetStartDate}`);
-    console.log(`Budget End Date: ${summary.budgetEndDate}`);
-  });
+    // Extract transaction categories from accountsInfo
+    const transactions = accountsInfo.transactions;
+    const categoryTitles = Object.entries(transactions).map(
+      ([transactionId, transaction]) => transaction.category.title
+    );
 
-  console.log(`\nBudget Summary for Month:\n`);
-  budgetSummaryForMonth.forEach((summary) => {
-    console.log(`Budget ID: ${summary.budgetId}`);
-    console.log(`Budget: ${summary.budgetName}`);
-    console.log(`Category: ${summary.category}`);
-    console.log(`Budget amount: $${summary.budgetAmount}`);
-    console.log(`Total amount: $${summary.totalAmount}`);
-    console.log(`Percentage used: ${summary.percentage}\n`);
-    console.log(`Budget Start Date: ${summary.budgetStartDate}`);
-    console.log(`Budget End Date: ${summary.budgetEndDate}`);
-  });
+    // Calculate frequency of each category
+    const categoryStats = categoryTitles.reduce(
+      (acc, title) => {
+        acc.freq[title] = (acc.freq[title] || 0) + 1;
+        return acc;
+      },
+      { freq: {}, distributed: {} }
+    );
+
+    // Create an array of categories sorted by frequency
+    const categories = Object.keys(categoryStats.freq).map((title) => ({
+      title,
+      percent: categoryStats.freq[title] / categoryTitles.length,
+      value: 0,
+      icon: transactions[
+        Object.keys(transactions).find(
+          (transactionId) =>
+            transactions[transactionId].category.title === title
+        )
+      ].category.icon,
+    }));
+
+    categories.sort((a, b) => b.percent - a.percent);
+
+    // Use knapsack algorithm to distribute budget among categories
+    for (let i = 0; i < categories.length; i++) {
+      const { title, percent } = categories[i];
+      const value = Math.floor(percent * budget);
+
+      if (value === 0) {
+        break;
+      }
+
+      const capacity =
+        budget -
+        categories.slice(0, i).reduce((acc, { value }) => acc + value, 0);
+      const weight = Math.min(value, capacity);
+      categories[i].value = weight;
+    }
+
+    // Calculate distributed budget for each category
+    categoryStats.distributed = categories.reduce(
+      (acc, { title, value, icon }) => {
+        acc[title] = { value, icon };
+        return acc;
+      },
+      {}
+    );
+
+    // Return distributed budget for each category with title and icon
+    return categoryStats.distributed;
+  }
+
+  async function createCategoryBudgets(accountsInfo, budget) {
+    const categoryStats = getCategoryStatistics(accountsInfo, budget);
+    const categoryBudgets = {};
+
+    if (!accountsInfo) {
+      return categoryBudgets;
+    }
+    if (!categoryStats) {
+      return categoryBudgets;
+    }
+
+    for (const [categoryTitle, categoryData] of Object.entries(categoryStats)) {
+      const budgetId = uuid.v4();
+
+      const { startDate, endDate } = getDateRange('day');
+
+      categoryBudgets[budgetId] = {
+        name: accountInfo.name,
+        budgetName: `${categoryTitle} Budget`,
+        amount: categoryData.value.toString(),
+        dateRange: 'day',
+        accountType: accountInfo.type,
+        category: {
+          title: categoryTitle,
+          icon: categoryData.icon,
+        },
+        dateRangeStart: startDate,
+        dateRangeEnd: endDate,
+      };
+    }
+
+    return Promise.resolve(categoryBudgets);
+  }
 
   const renderCategoryItems = (item) => (
     <List.Item
@@ -265,9 +356,50 @@ const BudgetRoute = () => {
         <Appbar.Content title="Title" />
       </Appbar.Header>
       <View style={styles.container}>
-        <Button mode="contained" icon="plus" onPress={() => handleSnapPress(0)}>
-          Add Budget
+        <Button
+          mode="contained"
+          icon="plus"
+          onPress={() => handleSnapPress(0)}
+          style={{ width: '100%' }}
+        >
+          <Text style={{ color: 'white', fontWeight: 'bold' }}>Add Budget</Text>
         </Button>
+        <Button
+          mode="contained"
+          icon="plus"
+          onPress={() => {
+            handleSuggest();
+          }}
+          style={{ width: '100%' }}
+        >
+          <Text style={{ color: 'white', fontWeight: 'bold' }}>
+            Suggest Budget
+          </Text>
+        </Button>
+        <ScrollView>
+          {budgetSummaryForDay.length !== 0 && (
+            <Card>
+              <Card.Content>
+                <Text variant="titleLarge">Daily</Text>
+                <Divider />
+                {budgetSummaryForDay?.map((summary) => (
+                  <Pressable
+                    key={summary.budgetID}
+                    onPress={() => console.log('hello')}
+                  >
+                    <View style={{ marginVertical: 5, width: '100%' }}>
+                      <Text variant="titleMedium">{summary.budgetName}</Text>
+                      <Text variant="titleSmall">{summary.budgetCategory}</Text>
+                      <Text variant="bodyLarge">{summary.budgetAmount}</Text>
+                      <ProgressBar progress={summary.percentage} color="blue" />
+                      <Divider bold={true} style={{ marginVertical: 5 }} />
+                    </View>
+                  </Pressable>
+                ))}
+              </Card.Content>
+            </Card>
+          )}
+        </ScrollView>
       </View>
       <BottomSheet
         ref={sheetRef}
@@ -450,8 +582,6 @@ export default BudgetRoute;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 200,
-    backgroundColor: 'grey',
   },
   contentContainer: {
     backgroundColor: 'white',

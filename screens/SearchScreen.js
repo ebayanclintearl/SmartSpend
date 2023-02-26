@@ -12,9 +12,9 @@ const SearchScreen = () => {
   const onChangeSearch = (query) => setSearchQuery(query);
 
   const filteredTransactions = (
-    accountsInfo?.transactions && Object.entries(accountsInfo.transactions)
+    accountsInfo.transactions && Object.entries(accountsInfo?.transactions)
   )
-    .map(([key, transaction]) => {
+    ?.map(([key, transaction]) => {
       return { id: key, ...transaction };
     })
     .filter((transaction) => {
