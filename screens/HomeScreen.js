@@ -6,25 +6,23 @@ import { TransactionRoute } from './BottomTabScreens/TransactionRoute';
 import BudgetRoute from './BottomTabScreens/BudgetRoute';
 
 const HomeScreen = () => {
+  const theme = useTheme();
   const [index, setIndex] = useState(0);
   const [routes] = useState([
     {
       key: 'transaction',
-      title: 'Transaction',
-      focusedIcon: 'note-plus',
-      unfocusedIcon: 'note-plus-outline',
+      title: 'Home',
+      focusedIcon: 'store-outline',
     },
     {
       key: 'budget',
       title: 'Budget',
-      focusedIcon: 'notebook',
-      unfocusedIcon: 'notebook-outline',
+      focusedIcon: 'widgets-outline',
     },
     {
       key: 'account',
       title: 'Account',
-      focusedIcon: 'account',
-      unfocusedIcon: 'account-outline',
+      focusedIcon: 'account-circle-outline',
     },
   ]);
   const renderScene = BottomNavigation.SceneMap({
@@ -32,15 +30,16 @@ const HomeScreen = () => {
     account: AccountRoute,
     budget: BudgetRoute,
   });
-  const theme = useTheme();
   return (
     <BottomNavigation
       navigationState={{ index, routes }}
       onIndexChange={setIndex}
       renderScene={renderScene}
-      shifting={true}
-      barStyle={{ backgroundColor: theme.colors.onPrimary }}
       keyboardHidesNavigationBar={true}
+      activeColor={theme.colors.primary}
+      barStyle={{ backgroundColor: '#FFFBFE' }}
+      inactiveColor="#79757F"
+      compact={true}
     />
   );
 };

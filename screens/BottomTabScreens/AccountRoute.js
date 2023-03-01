@@ -83,7 +83,7 @@ export const AccountRoute = () => {
           </Dialog.Actions>
         </Dialog>
       </Portal>
-      <Avatar.Text size={80} label={currentUser?.displayName?.slice(0, 1)} />
+      <Avatar.Text size={50} label={currentUser?.displayName?.slice(0, 1)} />
       <Text variant="headlineLarge">{currentUser?.displayName}</Text>
       <Text variant="headlineSmall">{currentUser?.email}</Text>
 
