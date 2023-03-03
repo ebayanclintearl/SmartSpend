@@ -11,6 +11,7 @@ const Stack = createStackNavigator();
 
 function HomeStack() {
   const { loggedIn } = useContext(LoginContext);
+  console.log(loggedIn);
 
   return (
     <Stack.Navigator>

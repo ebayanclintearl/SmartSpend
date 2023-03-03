@@ -13,10 +13,39 @@ export const formatDate = (date) => {
     'November',
     'December',
   ];
-  return (
-    date.getDate() + ' ' + months[date.getMonth()] + ' ' + date.getFullYear()
-  );
+  return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
 };
+export const formatDateRange = (startDate, endDate) => {
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  const startDay = startDate.getDate();
+  const startMonth = months[startDate.getMonth()];
+  const startYear = startDate.getFullYear();
+  const endDay = endDate.getDate();
+  const endMonth = months[endDate.getMonth()];
+  const endYear = endDate.getFullYear();
+
+  // Check if the dates are in the same month and year
+  if (startMonth === endMonth && startYear === endYear) {
+    return `${startDay} to ${endDay} ${startMonth} ${endYear}`;
+  }
+
+  // Otherwise, format the date range with the full month name
+  return `${startDay} ${startMonth} to ${endDay} ${endMonth} ${endYear}`;
+};
+
 export const formatDateAndTime = (date) => {
   const monthNames = [
     'January',
@@ -65,7 +94,7 @@ export const handleAmountChange = (value, setAmount) => {
   const numericValue = value.replace(/[^0-9]/g, '');
 
   // Check that the numeric value does not exceed 100 trillion
-  const numericLimit = 100_000_000_000;
+  const numericLimit = 100000000000;
   if (parseInt(numericValue) > numericLimit) {
     // Exit the function without updating the state
     return;

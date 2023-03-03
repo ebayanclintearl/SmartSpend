@@ -2,16 +2,16 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { createStackNavigator } from '@react-navigation/stack';
-import PeriodicalScreen from '../PeriodicalScreen';
+import HomeTabScreen from '../HomeTabScreen';
 import TransactionScreen from '../TransactionScreen';
 import TransactionDetailScreen from '../TransactionDetailScreen';
 import SearchScreen from '../SearchScreen';
 const Stack = createStackNavigator();
 
-export const TransactionRoute = () => {
+export const HomeRoute = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="PeriodicalScreen" component={PeriodicalScreen} />
+      <Stack.Screen name="HomeTabScreen" component={HomeTabScreen} />
       <Stack.Screen name="TransactionScreen" component={TransactionScreen} />
       <Stack.Screen
         name="TransactionDetailScreen"

@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import React, { useState } from 'react';
 import { BottomNavigation, Text, useTheme } from 'react-native-paper';
 import { AccountRoute } from './BottomTabScreens/AccountRoute';
-import { TransactionRoute } from './BottomTabScreens/TransactionRoute';
+import { HomeRoute } from './BottomTabScreens/HomeRoute';
 import BudgetRoute from './BottomTabScreens/BudgetRoute';
 
 const HomeScreen = () => {
@@ -10,7 +10,7 @@ const HomeScreen = () => {
   const [index, setIndex] = useState(0);
   const [routes] = useState([
     {
-      key: 'transaction',
+      key: 'home',
       title: 'Home',
       focusedIcon: 'store-outline',
     },
@@ -26,7 +26,7 @@ const HomeScreen = () => {
     },
   ]);
   const renderScene = BottomNavigation.SceneMap({
-    transaction: TransactionRoute,
+    home: HomeRoute,
     account: AccountRoute,
     budget: BudgetRoute,
   });

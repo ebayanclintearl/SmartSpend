@@ -55,7 +55,7 @@ export const fontConfig = {
     lineHeight: 36,
   },
   headlineLarge: {
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Regular',
     fontSize: 32,
     fontWeight: '400',
     letterSpacing: 0,

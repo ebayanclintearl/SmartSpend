@@ -22,6 +22,13 @@ export const AppContextProvider = ({ children }) => {
   useEffect(() => {
     const authStateChange = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
+      if (user) {
+        NetInfo.fetch().then((state) => {
+          if (state.isConnected) {
+            setLoggedIn(true);
+          }
+        });
+      }
     });
 
     // Clean up function to unsubscribe from auth state changes
