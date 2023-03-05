@@ -27,7 +27,7 @@ export const fontConfig = {
     lineHeight: 44,
   },
   displayMedium: {
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-Regular',
     fontSize: 45,
     fontWeight: '400',
     letterSpacing: 0,
