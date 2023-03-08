@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 import React, { useContext, useState } from 'react';
 import {
   TextInput,
@@ -10,37 +10,43 @@ import {
 } from 'react-native-paper';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, db } from '../config';
-import {
-  arrayUnion,
-  doc,
-  getDocs,
-  setDoc,
-  updateDoc,
-} from 'firebase/firestore';
+import { doc, getDocs, setDoc, updateDoc } from 'firebase/firestore';
 import { LoginContext } from '../Helper/Context';
 import { collection, query, where } from 'firebase/firestore';
 import { validateSignUpInputs } from '../Helper/Validation';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 const SignUpScreen = ({ navigation }) => {
+  const { setLoggedIn } = useContext(LoginContext);
+  const [accountName, setAccountName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [accountName, setAccountName] = useState('');
-  const { loggedIn, setLoggedIn } = useContext(LoginContext);
-  const [showLoading, setShowLoading] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [familyProvider, setFamilyProvider] = useState(true);
   const [familyCode, setFamilyCode] = useState('');
+  const [showLoading, setShowLoading] = useState(false);
+  const [securePassword, setSecurePassword] = useState(true);
+  const [secureConfirmPassword, setSecureConfirmPassword] = useState(true);
   const [error, setError] = useState({
     errorMessage: '',
     errorAccountName: false,
     errorEmail: false,
     errorPassword: false,
+    errorConfirmPassword: false,
     errorFamilyCode: false,
   });
+
+  // Function to toggle visibility of password text
+  const toggleSecurePassword = () => setSecurePassword(!securePassword);
+  const toggleSecureConfirmPassword = () =>
+    setSecureConfirmPassword(!secureConfirmPassword);
 
   const handleSignUp = async () => {
     const validationResult = validateSignUpInputs(
       accountName,
       email,
       password,
+      confirmPassword,
       familyCode,
       familyProvider
     );
@@ -58,6 +64,7 @@ const SignUpScreen = ({ navigation }) => {
             errorAccountName: false,
             errorEmail: false,
             errorPassword: false,
+            errorConfirmPassword: false,
             errorFamilyCode: true,
           });
           return;
@@ -68,6 +75,7 @@ const SignUpScreen = ({ navigation }) => {
           errorAccountName: false,
           errorEmail: false,
           errorPassword: false,
+          errorConfirmPassword: false,
           errorFamilyCode: true,
         });
         return;
@@ -119,6 +127,7 @@ const SignUpScreen = ({ navigation }) => {
         errorAccountName: false,
         errorEmail: true,
         errorPassword: false,
+        errorConfirmPassword: false,
         errorFamilyCode: false,
       });
     }
@@ -134,94 +143,186 @@ const SignUpScreen = ({ navigation }) => {
 
   return (
     <>
-      <Appbar.Header>
-        <Appbar.BackAction
-          onPress={() => {
-            navigation.navigate('SignInScreen');
-          }}
-        />
-      </Appbar.Header>
-      <View style={styles.container}>
-        {error.errorAccountName && (
-          <HelperText type="error" visible={error.errorAccountName}>
-            {error.errorMessage}
-          </HelperText>
-        )}
-        <TextInput
-          label="Name"
-          value={accountName}
-          error={error.errorAccountName}
-          onChangeText={(accountName) => setAccountName(accountName)}
-        />
-        {error.errorEmail && (
-          <HelperText type="error" visible={error.errorEmail}>
-            {error.errorMessage}
-          </HelperText>
-        )}
-        <TextInput
-          label="Email"
-          value={email}
-          error={error.errorEmail}
-          onChangeText={(email) => setEmail(email)}
-        />
-        {error.errorPassword && (
-          <HelperText type="error" visible={error.errorPassword}>
-            {error.errorMessage}
-          </HelperText>
-        )}
-        <TextInput
-          label="Password"
-          value={password}
-          onChangeText={(password) => setPassword(password)}
-        />
-
-        {!familyProvider && (
-          <>
-            {error.errorFamilyCode && (
-              <HelperText type="error" visible={error.errorFamilyCode}>
+      {/* SafeAreaView and KeyboardAwareScrollView from react-native libraries */}
+      <SafeAreaView style={styles.container}>
+        <KeyboardAwareScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <View
+            style={{
+              paddingHorizontal: '8%',
+              flex: 1,
+            }}
+          >
+            {/* Display register text and img background */}
+            <View
+              style={{
+                width: '100%',
+                height: 200,
+                justifyContent: 'center',
+                marginBottom: 30,
+              }}
+            >
+              <Image
+                resizeMode="contain"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  position: 'absolute',
+                  top: 15,
+                  left: -25,
+                }}
+                source={require('../assets/AppAssets/registration_bg.png')}
+              />
+              <Text variant="displayMedium" style={{ color: '#FF4C38' }}>
+                Register
+              </Text>
+              <Text variant="bodyLarge">Please Sign Up to continue</Text>
+            </View>
+            {/* Show error message if account name error occurs */}
+            {error.errorAccountName && (
+              <HelperText type="error" visible={error.errorAccountName}>
                 {error.errorMessage}
               </HelperText>
             )}
+            {/* Input field for account name */}
             <TextInput
               mode="outlined"
-              label="Family Code"
-              value={familyCode}
-              onChangeText={(familyCode) => setFamilyCode(familyCode)}
+              label="Full name"
+              value={accountName}
+              onChangeText={(accountName) => setAccountName(accountName)}
+              outlineColor="#F5F6FA"
+              outlineStyle={{ borderRadius: 5 }}
+              style={{
+                marginVertical: 2,
+                backgroundColor: '#F5F6FA',
+              }}
             />
-          </>
-        )}
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <Checkbox
-            status={familyProvider ? 'checked' : 'unchecked'}
-            onPress={() => {
-              setFamilyProvider(!familyProvider);
-            }}
-          />
-          <Text>Family Provider</Text>
-          <Checkbox
-            status={familyProvider ? 'unchecked' : 'checked'}
-            onPress={() => {
-              setFamilyProvider(!familyProvider);
-            }}
-          />
-          <Text>Family Member</Text>
-        </View>
-        <Button
-          mode="contained"
-          onPress={() => {
-            handleSignUp();
-          }}
-          loading={showLoading}
-        >
-          Sign Up
-        </Button>
-      </View>
+            {/* Show error message if email error occurs */}
+            {error.errorEmail && (
+              <HelperText type="error" visible={error.errorEmail}>
+                {error.errorMessage}
+              </HelperText>
+            )}
+            {/* Input field for email */}
+            <TextInput
+              mode="outlined"
+              label="Email"
+              value={email}
+              onChangeText={(email) => setEmail(email)}
+              outlineColor="#F5F6FA"
+              outlineStyle={{ borderRadius: 5 }}
+              style={{
+                marginVertical: 2,
+                backgroundColor: '#F5F6FA',
+              }}
+            />
+            {/* Show error message if password error occurs */}
+            {error.errorPassword && (
+              <HelperText type="error" visible={error.errorPassword}>
+                {error.errorMessage}
+              </HelperText>
+            )}
+            {/* Input field for password */}
+            <TextInput
+              mode="outlined"
+              label="Password"
+              value={password}
+              onChangeText={(password) => setPassword(password)}
+              outlineColor="#F5F6FA"
+              outlineStyle={{ borderRadius: 5 }}
+              secureTextEntry={securePassword}
+              right={
+                <TextInput.Icon
+                  icon={securePassword ? 'eye' : 'eye-off'}
+                  iconColor="#7F8192"
+                  forceTextInputFocus={false}
+                  onPress={toggleSecurePassword}
+                />
+              }
+              style={{
+                marginVertical: 2,
+                backgroundColor: '#F5F6FA',
+              }}
+            />
+            {/* Show error message if confirm password error occurs */}
+            {error.errorConfirmPassword && (
+              <HelperText type="error" visible={error.errorConfirmPassword}>
+                {error.errorMessage}
+              </HelperText>
+            )}
+            {/* Input field for confirm password */}
+            <TextInput
+              mode="outlined"
+              label="Confirm Password"
+              value={confirmPassword}
+              onChangeText={(confirmPassword) =>
+                setConfirmPassword(confirmPassword)
+              }
+              outlineColor="#F5F6FA"
+              outlineStyle={{ borderRadius: 5 }}
+              secureTextEntry={secureConfirmPassword}
+              right={
+                <TextInput.Icon
+                  icon={secureConfirmPassword ? 'eye' : 'eye-off'}
+                  iconColor="#7F8192"
+                  forceTextInputFocus={false}
+                  onPress={toggleSecureConfirmPassword}
+                />
+              }
+              style={{
+                marginVertical: 2,
+                backgroundColor: '#F5F6FA',
+              }}
+            />
+
+            {!familyProvider && (
+              <>
+                {error.errorFamilyCode && (
+                  <HelperText type="error" visible={error.errorFamilyCode}>
+                    {error.errorMessage}
+                  </HelperText>
+                )}
+                <TextInput
+                  mode="outlined"
+                  label="Family Code"
+                  value={familyCode}
+                  onChangeText={(familyCode) => setFamilyCode(familyCode)}
+                />
+              </>
+            )}
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Checkbox
+                status={familyProvider ? 'checked' : 'unchecked'}
+                onPress={() => {
+                  setFamilyProvider(!familyProvider);
+                }}
+              />
+              <Text>Family Provider</Text>
+              <Checkbox
+                status={familyProvider ? 'unchecked' : 'checked'}
+                onPress={() => {
+                  setFamilyProvider(!familyProvider);
+                }}
+              />
+              <Text>Family Member</Text>
+            </View>
+            <Button
+              mode="contained"
+              onPress={() => {
+                handleSignUp();
+              }}
+              loading={showLoading}
+            >
+              Sign Up
+            </Button>
+          </View>
+        </KeyboardAwareScrollView>
+      </SafeAreaView>
     </>
   );
 };
@@ -231,6 +332,6 @@ export default SignUpScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
   },
 });

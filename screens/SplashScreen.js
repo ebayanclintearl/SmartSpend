@@ -5,7 +5,7 @@ import { AuthContext, LoginContext } from '../Helper/Context';
 
 const SplashScreen = ({ navigation }) => {
   const { currentUser } = useContext(AuthContext);
-  const { loggedIn, setLoggedIn } = useContext(LoginContext);
+  const { setLoggedIn } = useContext(LoginContext);
   const handleNavigation = () => {
     if (currentUser) {
       setLoggedIn(true);
@@ -15,7 +15,7 @@ const SplashScreen = ({ navigation }) => {
   };
   return (
     <View style={styles.container}>
-      <View style={{ paddingHorizontal: '5%' }}>
+      <View style={{ paddingHorizontal: '8%' }}>
         <Image
           resizeMode="contain"
           style={{ width: '80%', height: '40%', alignSelf: 'center' }}

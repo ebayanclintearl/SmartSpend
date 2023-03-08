@@ -131,6 +131,7 @@ export const validateSignUpInputs = (
   accountName,
   email,
   password,
+  confirmPassword,
   familyCode,
   familyProvider
 ) => {
@@ -140,6 +141,7 @@ export const validateSignUpInputs = (
       errorAccountName: true,
       errorEmail: false,
       errorPassword: false,
+      errorConfirmPassword: false,
       errorFamilyCode: false,
     };
   } else if (!/^[a-zA-Z]+( [a-zA-Z]+)*$/.test(accountName)) {
@@ -148,6 +150,7 @@ export const validateSignUpInputs = (
       errorAccountName: true,
       errorEmail: false,
       errorPassword: false,
+      errorConfirmPassword: false,
       errorFamilyCode: false,
     };
   } else if (!email.trim()) {
@@ -156,6 +159,7 @@ export const validateSignUpInputs = (
       errorAccountName: false,
       errorEmail: true,
       errorPassword: false,
+      errorConfirmPassword: false,
       errorFamilyCode: false,
     };
   } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
@@ -164,6 +168,7 @@ export const validateSignUpInputs = (
       errorAccountName: false,
       errorEmail: true,
       errorPassword: false,
+      errorConfirmPassword: false,
       errorFamilyCode: false,
     };
   } else if (!password.trim()) {
@@ -172,6 +177,34 @@ export const validateSignUpInputs = (
       errorAccountName: false,
       errorEmail: false,
       errorPassword: true,
+      errorConfirmPassword: false,
+      errorFamilyCode: false,
+    };
+  } else if (password.length < 6) {
+    return {
+      errorMessage: 'Must be at least 6 characters',
+      errorAccountName: false,
+      errorEmail: false,
+      errorPassword: true,
+      errorConfirmPassword: false,
+      errorFamilyCode: false,
+    };
+  } else if (!confirmPassword.trim()) {
+    return {
+      errorMessage: 'Empty Value',
+      errorAccountName: false,
+      errorEmail: false,
+      errorPassword: false,
+      errorConfirmPassword: true,
+      errorFamilyCode: false,
+    };
+  } else if (confirmPassword !== password) {
+    return {
+      errorMessage: 'Passwords do not match',
+      errorAccountName: false,
+      errorEmail: false,
+      errorPassword: false,
+      errorConfirmPassword: true,
       errorFamilyCode: false,
     };
   } else if (!familyCode.trim() && !familyProvider) {
@@ -180,6 +213,7 @@ export const validateSignUpInputs = (
       errorAccountName: false,
       errorEmail: false,
       errorPassword: false,
+      errorConfirmPassword: false,
       errorFamilyCode: true,
     };
   }
@@ -188,6 +222,7 @@ export const validateSignUpInputs = (
     errorAccountName: false,
     errorEmail: false,
     errorPassword: false,
+    errorConfirmPassword: false,
     errorFamilyCode: false,
   };
 };

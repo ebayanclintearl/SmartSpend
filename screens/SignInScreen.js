@@ -1,24 +1,20 @@
-import { Image, KeyboardAvoidingView, StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 import React, { useContext, useState } from 'react';
-import {
-  Button,
-  Text,
-  TextInput,
-  Appbar,
-  HelperText,
-} from 'react-native-paper';
+import { Button, Text, TextInput, HelperText } from 'react-native-paper';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config';
 import { LoginContext } from '../Helper/Context';
 import { validateSignInInputs } from '../Helper/Validation';
-import { ScrollView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-const SignInScreen = ({ navigation }) => {
+import { useNavigation } from '@react-navigation/native';
+const SignInScreen = () => {
+  // Initialize state variables
+  const navigation = useNavigation(); // Hook from react-navigation library to access navigation prop
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showLoading, setShowLoading] = useState(false);
-  const { loggedIn, setLoggedIn } = useContext(LoginContext);
+  const { setLoggedIn } = useContext(LoginContext); // Use context from LoginContext
   const [secure, setSecure] = useState(true);
   const [error, setError] = useState({
     errorMessage: '',
@@ -26,18 +22,22 @@ const SignInScreen = ({ navigation }) => {
     errorPassword: false,
     errorAccount: false,
   });
-
+  // Function to toggle visibility of password text
   const toggleSecure = () => setSecure(!secure);
+
+  // Function to handle sign in button press
   const handleSignIn = async () => {
+    // Validate sign in inputs
     const validationResult = validateSignInInputs(email, password);
     setError(validationResult);
     if (validationResult.errorMessage) return;
 
+    // Attempt to sign in with Firebase authentication
     try {
       setShowLoading(true);
       await signInWithEmailAndPassword(auth, email, password);
       setShowLoading(false);
-      setLoggedIn(true);
+      setLoggedIn(true); // Set loggedIn state to true in LoginContext
     } catch (error) {
       setError({
         errorMessage: 'Invalid email/password',
@@ -50,6 +50,7 @@ const SignInScreen = ({ navigation }) => {
   };
   return (
     <>
+      {/* SafeAreaView and KeyboardAwareScrollView from react-native libraries */}
       <SafeAreaView style={styles.container}>
         <KeyboardAwareScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <View
@@ -58,6 +59,7 @@ const SignInScreen = ({ navigation }) => {
               flex: 1,
             }}
           >
+            {/* Display login text and img background */}
             <View
               style={{
                 width: '100%',
@@ -81,19 +83,22 @@ const SignInScreen = ({ navigation }) => {
               </Text>
               <Text variant="bodyLarge">Please Sign In to continue</Text>
             </View>
+            {/* Show error message if account error occurs */}
             {error.errorAccount && (
               <HelperText type="error" visible={error.errorAccount}>
                 {error.errorMessage}
               </HelperText>
             )}
+            {/* Show error message if email error occurs */}
             {error.errorEmail && (
               <HelperText type="error" visible={error.errorEmail}>
                 {error.errorMessage}
               </HelperText>
             )}
+            {/* Input field for email */}
             <TextInput
               mode="outlined"
-              label="Enter Email Address"
+              label="Email Address"
               value={email}
               onChangeText={(email) => setEmail(email)}
               outlineColor="#F5F6FA"
@@ -103,11 +108,13 @@ const SignInScreen = ({ navigation }) => {
                 backgroundColor: '#F5F6FA',
               }}
             />
+            {/* Show error message if password error occurs */}
             {error.errorPassword && (
               <HelperText type="error" visible={error.errorPassword}>
                 {error.errorMessage}
               </HelperText>
             )}
+            {/* Input field for password */}
             <TextInput
               mode="outlined"
               label="Password"
@@ -129,6 +136,7 @@ const SignInScreen = ({ navigation }) => {
                 backgroundColor: '#F5F6FA',
               }}
             />
+            {/* Button for login */}
             <Button
               mode="contained"
               style={{ marginVertical: 10, borderRadius: 5 }}
@@ -140,6 +148,7 @@ const SignInScreen = ({ navigation }) => {
             >
               Login
             </Button>
+            {/* Navigation to registration prompt screen */}
             <View
               style={{ flex: 1, justifyContent: 'flex-end', marginBottom: 30 }}
             >
@@ -150,7 +159,7 @@ const SignInScreen = ({ navigation }) => {
                 style={{ width: '50%' }}
                 contentStyle={{ flexDirection: 'row-reverse' }}
                 labelStyle={{ fontWeight: 'bold', top: -1 }}
-                onPress={() => navigation.navigate('SignUpScreen')}
+                onPress={() => navigation.navigate('RegistrationPromptScreen')}
               >
                 R E G I S T E R
               </Button>

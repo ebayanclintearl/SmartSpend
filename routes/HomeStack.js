@@ -6,6 +6,7 @@ import HomeScreen from '../screens/HomeScreen';
 import { LoginContext } from '../Helper/Context';
 import { useContext } from 'react';
 import TransactionScreen from '../screens/TransactionScreen';
+import RegistrationPromptScreen from '../screens/RegistrationPromptScreen';
 
 const Stack = createStackNavigator();
 
@@ -38,6 +39,11 @@ function HomeStack() {
           <Stack.Screen
             name="SignInScreen"
             component={SignInScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="RegistrationPromptScreen"
+            component={RegistrationPromptScreen}
             options={{ headerShown: false }}
           />
           <Stack.Screen
