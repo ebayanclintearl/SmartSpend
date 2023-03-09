@@ -123,7 +123,7 @@ const SignUpScreen = ({ navigation }) => {
     } catch (error) {
       setShowLoading(false);
       setError({
-        errorMessage: error.message || 'Invalid Email/Password',
+        errorMessage: 'Email already in use',
         errorAccountName: false,
         errorEmail: true,
         errorPassword: false,
@@ -158,7 +158,7 @@ const SignUpScreen = ({ navigation }) => {
                 width: '100%',
                 height: 200,
                 justifyContent: 'center',
-                marginBottom: 30,
+                marginBottom: 20,
               }}
             >
               <Image
@@ -190,6 +190,7 @@ const SignUpScreen = ({ navigation }) => {
               value={accountName}
               onChangeText={(accountName) => setAccountName(accountName)}
               outlineColor="#F5F6FA"
+              activeOutlineColor="#FF4C38"
               outlineStyle={{ borderRadius: 5 }}
               style={{
                 marginVertical: 2,
@@ -209,6 +210,7 @@ const SignUpScreen = ({ navigation }) => {
               value={email}
               onChangeText={(email) => setEmail(email)}
               outlineColor="#F5F6FA"
+              activeOutlineColor="#FF4C38"
               outlineStyle={{ borderRadius: 5 }}
               style={{
                 marginVertical: 2,
@@ -228,6 +230,7 @@ const SignUpScreen = ({ navigation }) => {
               value={password}
               onChangeText={(password) => setPassword(password)}
               outlineColor="#F5F6FA"
+              activeOutlineColor="#FF4C38"
               outlineStyle={{ borderRadius: 5 }}
               secureTextEntry={securePassword}
               right={
@@ -258,6 +261,7 @@ const SignUpScreen = ({ navigation }) => {
                 setConfirmPassword(confirmPassword)
               }
               outlineColor="#F5F6FA"
+              activeOutlineColor="#FF4C38"
               outlineStyle={{ borderRadius: 5 }}
               secureTextEntry={secureConfirmPassword}
               right={
@@ -274,7 +278,7 @@ const SignUpScreen = ({ navigation }) => {
               }}
             />
 
-            {!familyProvider && (
+            {/* {!familyProvider && (
               <>
                 {error.errorFamilyCode && (
                   <HelperText type="error" visible={error.errorFamilyCode}>
@@ -310,16 +314,35 @@ const SignUpScreen = ({ navigation }) => {
                 }}
               />
               <Text>Family Member</Text>
-            </View>
+            </View> */}
+            {/* Button for login */}
             <Button
               mode="contained"
+              style={{ marginVertical: 10, borderRadius: 5 }}
+              contentStyle={{ padding: 3, backgroundColor: '#FF4C38' }}
               onPress={() => {
                 handleSignUp();
               }}
               loading={showLoading}
             >
-              Sign Up
+              Register
             </Button>
+            {/* Navigation to login screen */}
+            <View
+              style={{ flex: 1, justifyContent: 'flex-end', marginBottom: 30 }}
+            >
+              <Text variant="labelLarge">Already have an account?</Text>
+              <Button
+                mode="text"
+                icon="arrow-right"
+                style={{ width: '50%' }}
+                contentStyle={{ flexDirection: 'row-reverse' }}
+                labelStyle={{ fontWeight: 'bold', top: -1, color: '#FF4C38' }}
+                onPress={() => navigation.navigate('SignInScreen')}
+              >
+                L O G I N
+              </Button>
+            </View>
           </View>
         </KeyboardAwareScrollView>
       </SafeAreaView>

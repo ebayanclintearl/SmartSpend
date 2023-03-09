@@ -158,7 +158,7 @@ const SignInScreen = () => {
                 icon="arrow-right"
                 style={{ width: '50%' }}
                 contentStyle={{ flexDirection: 'row-reverse' }}
-                labelStyle={{ fontWeight: 'bold', top: -1 }}
+                labelStyle={{ fontWeight: 'bold', top: -1, color: '#38B6FF' }}
                 onPress={() => navigation.navigate('RegistrationPromptScreen')}
               >
                 R E G I S T E R

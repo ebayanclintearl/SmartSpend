@@ -12,7 +12,7 @@ const RegistrationPromptScreen = () => {
     if (isFamilyProvider) {
       navigation.navigate('SignUpScreen');
     } else {
-      navigation.navigate('FamilyProviderRegistrationScreen');
+      navigation.navigate('CodeVerificationScreen');
     }
   };
   return (

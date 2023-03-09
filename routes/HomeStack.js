@@ -7,12 +7,12 @@ import { LoginContext } from '../Helper/Context';
 import { useContext } from 'react';
 import TransactionScreen from '../screens/TransactionScreen';
 import RegistrationPromptScreen from '../screens/RegistrationPromptScreen';
+import CodeVerificationScreen from '../screens/CodeVerificationScreen';
 
 const Stack = createStackNavigator();
 
 function HomeStack() {
   const { loggedIn } = useContext(LoginContext);
-  console.log(loggedIn);
 
   return (
     <Stack.Navigator>
@@ -44,6 +44,11 @@ function HomeStack() {
           <Stack.Screen
             name="RegistrationPromptScreen"
             component={RegistrationPromptScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="CodeVerificationScreen"
+            component={CodeVerificationScreen}
             options={{ headerShown: false }}
           />
           <Stack.Screen
