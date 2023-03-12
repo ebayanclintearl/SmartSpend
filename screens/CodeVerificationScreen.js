@@ -1,4 +1,4 @@
-import { StyleSheet, View, SafeAreaView, Image } from 'react-native';
+import { StyleSheet, View, SafeAreaView, Image, StatusBar } from 'react-native';
 import React, { useState } from 'react';
 import { Appbar, Button, Text } from 'react-native-paper';
 import {
@@ -8,126 +8,165 @@ import {
   useClearByFocusCell,
 } from 'react-native-confirmation-code-field';
 import { useNavigation } from '@react-navigation/native';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../config';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const CELL_COUNT = 5;
 const CodeVerificationScreen = () => {
   const navigation = useNavigation();
+  const [showLoading, setShowloading] = useState();
+  const [error, setError] = useState(false);
   const [value, setValue] = useState('');
   const ref = useBlurOnFulfill({ value, cellCount: CELL_COUNT });
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({
     value,
     setValue,
   });
+  const handleNext = async () => {
+    setShowloading(true);
+    const codeExist = await handleCodeVerification(value);
+    if (codeExist) {
+      setShowloading(false);
+      setError(false);
+      navigation.navigate('SignUpScreen', { familyCode: value });
+    } else {
+      setShowloading(false);
+      setError(true);
+      return;
+    }
+  };
+  const handleCodeVerification = async (code) => {
+    const familyGroupRef = doc(db, 'familyGroup', code);
+    const docSnap = await getDoc(familyGroupRef);
+
+    return docSnap.exists();
+  };
   return (
     <>
-      <Appbar.Header style={{ backgroundColor: '#FFFFFF' }}>
-        <Appbar.BackAction
-          style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: 'rgba(230, 230, 230, 0.56)',
-          }}
-          onPress={() => {
-            navigation.pop();
-          }}
+      {/* SafeAreaView and KeyboardAwareScrollView from react-native libraries */}
+      <SafeAreaView style={styles.container}>
+        <StatusBar
+          backgroundColor="#FF4C38"
+          barStyle="light-content"
+          translucent
         />
-      </Appbar.Header>
-
-      <View style={styles.container}>
-        <View
-          style={{
-            paddingHorizontal: '8%',
-            flex: 1,
-          }}
-        >
-          {/* Display register prompt text and img background */}
+        <KeyboardAwareScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <Appbar.Header style={{ backgroundColor: '#FFFFFF' }}>
+            <Appbar.BackAction
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: 'rgba(230, 230, 230, 0.56)',
+              }}
+              onPress={() => {
+                navigation.pop();
+              }}
+            />
+          </Appbar.Header>
           <View
             style={{
-              width: '100%',
-              height: 200,
-              justifyContent: 'center',
-              marginBottom: 10,
+              paddingHorizontal: '8%',
+              flex: 1,
             }}
           >
-            <Image
-              resizeMode="contain"
+            {/* Display register prompt text and img background */}
+            <View
               style={{
                 width: '100%',
-                height: '100%',
-                position: 'absolute',
-                left: -20,
-              }}
-              source={require('../assets/AppAssets/registration_bg.png')}
-            />
-            <Text variant="displayMedium" style={{ color: '#FF4C38' }}>
-              Enter Code
-            </Text>
-            <Text variant="bodyLarge" style={{ color: '#151940' }}>
-              Ask your Family Head for the Family Code generated on their
-              account screen.
-            </Text>
-          </View>
-          <View
-            style={{
-              width: '100%',
-              height: 80,
-              justifyContent: 'center',
-            }}
-          >
-            <CodeField
-              ref={ref}
-              {...props}
-              value={value}
-              onChangeText={setValue}
-              cellCount={CELL_COUNT}
-              rootStyle={styles.codeFieldRoot}
-              keyboardType="number-pad"
-              textContentType="oneTimeCode"
-              renderCell={({ index, symbol, isFocused }) => (
-                <Text
-                  variant="displayLarge"
-                  key={index}
-                  style={[styles.cell, isFocused && styles.focusCell]}
-                  onLayout={getCellOnLayoutHandler(index)}
-                >
-                  {symbol ||
-                    (isFocused ? (
-                      <Cursor
-                        cursorSymbol={
-                          <Text
-                            variant="displayMedium"
-                            style={{ lineHeight: 58, fontSize: 30 }}
-                          >
-                            |
-                          </Text>
-                        }
-                      />
-                    ) : null)}
-                </Text>
-              )}
-            />
-          </View>
-
-          {/* Button for login */}
-          <View style={{ flex: 1, justifyContent: 'center' }}>
-            <Button
-              mode="contained"
-              style={{
-                backgroundColor: '#FF4C38',
-                marginVertical: 10,
-                borderRadius: 5,
-              }}
-              contentStyle={{ padding: 3 }}
-              onPress={() => {
-                handleSignIn();
+                height: 200,
+                justifyContent: 'center',
+                marginBottom: 10,
               }}
             >
-              Next
-            </Button>
+              <Image
+                resizeMode="contain"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  position: 'absolute',
+                  left: -20,
+                }}
+                source={require('../assets/AppAssets/registration_bg.png')}
+              />
+              <Text variant="displayMedium" style={{ color: '#FF4C38' }}>
+                Enter Code
+              </Text>
+              <Text variant="bodyLarge" style={{ color: '#151940' }}>
+                Ask your Family Head for the Family Code generated on their
+                account screen.
+              </Text>
+            </View>
+            <View
+              style={{
+                width: '100%',
+                height: 80,
+                justifyContent: 'center',
+              }}
+            >
+              {error && (
+                <Text style={{ color: '#FF4C38' }}>
+                  Invalid verification code.
+                </Text>
+              )}
+
+              <CodeField
+                ref={ref}
+                {...props}
+                value={value}
+                onChangeText={setValue}
+                cellCount={CELL_COUNT}
+                rootStyle={styles.codeFieldRoot}
+                keyboardType="number-pad"
+                textContentType="oneTimeCode"
+                renderCell={({ index, symbol, isFocused }) => (
+                  <Text
+                    variant="displayLarge"
+                    key={index}
+                    style={[styles.cell, isFocused && styles.focusCell]}
+                    onLayout={getCellOnLayoutHandler(index)}
+                  >
+                    {symbol ||
+                      (isFocused ? (
+                        <Cursor
+                          cursorSymbol={
+                            <Text
+                              variant="displayMedium"
+                              style={{ lineHeight: 58, fontSize: 30 }}
+                            >
+                              |
+                            </Text>
+                          }
+                        />
+                      ) : null)}
+                  </Text>
+                )}
+              />
+            </View>
+
+            {/* Button for login */}
+            <View style={{ flex: 1, justifyContent: 'center' }}>
+              <Button
+                mode="contained"
+                loading={showLoading}
+                disabled={value.length !== 5 ? true : false}
+                style={{
+                  backgroundColor: '#FF4C38',
+                  marginVertical: 10,
+                  borderRadius: 5,
+                }}
+                contentStyle={{ padding: 3 }}
+                onPress={() => {
+                  handleNext();
+                }}
+              >
+                Next
+              </Button>
+            </View>
           </View>
-        </View>
-      </View>
+        </KeyboardAwareScrollView>
+      </SafeAreaView>
     </>
   );
 };

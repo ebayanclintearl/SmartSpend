@@ -1,13 +1,6 @@
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, StatusBar, StyleSheet, View } from 'react-native';
 import React, { useContext, useState } from 'react';
-import {
-  TextInput,
-  Button,
-  Appbar,
-  Text,
-  Checkbox,
-  HelperText,
-} from 'react-native-paper';
+import { TextInput, Button, Text, HelperText } from 'react-native-paper';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, db } from '../config';
 import { doc, getDocs, setDoc, updateDoc } from 'firebase/firestore';
@@ -16,14 +9,15 @@ import { collection, query, where } from 'firebase/firestore';
 import { validateSignUpInputs } from '../Helper/Validation';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-const SignUpScreen = ({ navigation }) => {
+import { useNavigation } from '@react-navigation/native';
+const SignUpScreen = ({ route }) => {
+  const navigation = useNavigation();
+  const { familyCode } = route.params || {};
   const { setLoggedIn } = useContext(LoginContext);
   const [accountName, setAccountName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [familyProvider, setFamilyProvider] = useState(true);
-  const [familyCode, setFamilyCode] = useState('');
   const [showLoading, setShowLoading] = useState(false);
   const [securePassword, setSecurePassword] = useState(true);
   const [secureConfirmPassword, setSecureConfirmPassword] = useState(true);
@@ -41,47 +35,19 @@ const SignUpScreen = ({ navigation }) => {
   const toggleSecureConfirmPassword = () =>
     setSecureConfirmPassword(!secureConfirmPassword);
 
+  // Function to handle sign up button press
   const handleSignUp = async () => {
+    // Validate sign up inputs
     const validationResult = validateSignUpInputs(
       accountName,
       email,
       password,
-      confirmPassword,
-      familyCode,
-      familyProvider
+      confirmPassword
     );
     setError(validationResult);
     if (validationResult.errorMessage) return;
 
-    if (!familyProvider) {
-      setShowLoading(true);
-      try {
-        const validFamilyCode = await validateFamilyCode(familyCode);
-        if (!validFamilyCode) {
-          setShowLoading(false);
-          setError({
-            errorMessage: 'Invalid Family Code',
-            errorAccountName: false,
-            errorEmail: false,
-            errorPassword: false,
-            errorConfirmPassword: false,
-            errorFamilyCode: true,
-          });
-          return;
-        }
-      } catch (error) {
-        setError({
-          errorMessage: 'Error validating Family Code',
-          errorAccountName: false,
-          errorEmail: false,
-          errorPassword: false,
-          errorConfirmPassword: false,
-          errorFamilyCode: true,
-        });
-        return;
-      }
-    }
-
+    // Attempt to sign up with Firebase FireStore
     try {
       setShowLoading(true);
       const res = await createUserWithEmailAndPassword(auth, email, password);
@@ -93,26 +59,26 @@ const SignUpScreen = ({ navigation }) => {
         uid: res.user.uid,
         name: accountName,
         email: email,
-        type: familyProvider ? 'provider' : 'member',
-        code: familyProvider ? code.toString() : familyCode,
+        type: familyCode ? 'member' : 'provider',
+        code: familyCode || code.toString(),
       });
 
-      if (familyProvider) {
-        const familyGroupRef = doc(db, 'familyGroup', code.toString());
-        await setDoc(familyGroupRef, {
-          [res.user.uid]: {
-            email: email,
-            name: accountName,
-            type: 'provider',
-          },
-        });
-      } else {
+      if (familyCode) {
         const familyGroupRef = doc(db, 'familyGroup', familyCode);
         await updateDoc(familyGroupRef, {
           [res.user.uid]: {
             email: email,
             name: accountName,
             type: 'member',
+          },
+        });
+      } else {
+        const familyGroupRef = doc(db, 'familyGroup', code.toString());
+        await setDoc(familyGroupRef, {
+          [res.user.uid]: {
+            email: email,
+            name: accountName,
+            type: 'provider',
           },
         });
       }
@@ -122,29 +88,37 @@ const SignUpScreen = ({ navigation }) => {
       console.log('Done execution, sign up');
     } catch (error) {
       setShowLoading(false);
-      setError({
-        errorMessage: 'Email already in use',
-        errorAccountName: false,
-        errorEmail: true,
-        errorPassword: false,
-        errorConfirmPassword: false,
-        errorFamilyCode: false,
-      });
+      if (error.code === 'auth/email-already-in-use') {
+        setError({
+          errorMessage: 'Email already in use',
+          errorAccountName: false,
+          errorEmail: true,
+          errorPassword: false,
+          errorConfirmPassword: false,
+          errorFamilyCode: false,
+        });
+      } else {
+        setError({
+          errorMessage: 'An error occurred while signing up.',
+          errorAccountName: true,
+          errorEmail: false,
+          errorPassword: false,
+          errorConfirmPassword: false,
+          errorFamilyCode: false,
+        });
+      }
     }
-  };
-
-  const validateFamilyCode = async (code) => {
-    const usersRef = collection(db, 'users');
-    const querySnapshot = await getDocs(
-      query(usersRef, where('code', '==', code))
-    );
-    return !querySnapshot.empty;
   };
 
   return (
     <>
       {/* SafeAreaView and KeyboardAwareScrollView from react-native libraries */}
       <SafeAreaView style={styles.container}>
+        <StatusBar
+          backgroundColor="#FF4C38"
+          barStyle="light-content"
+          translucent
+        />
         <KeyboardAwareScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <View
             style={{
@@ -277,44 +251,6 @@ const SignUpScreen = ({ navigation }) => {
                 backgroundColor: '#F5F6FA',
               }}
             />
-
-            {/* {!familyProvider && (
-              <>
-                {error.errorFamilyCode && (
-                  <HelperText type="error" visible={error.errorFamilyCode}>
-                    {error.errorMessage}
-                  </HelperText>
-                )}
-                <TextInput
-                  mode="outlined"
-                  label="Family Code"
-                  value={familyCode}
-                  onChangeText={(familyCode) => setFamilyCode(familyCode)}
-                />
-              </>
-            )}
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              <Checkbox
-                status={familyProvider ? 'checked' : 'unchecked'}
-                onPress={() => {
-                  setFamilyProvider(!familyProvider);
-                }}
-              />
-              <Text>Family Provider</Text>
-              <Checkbox
-                status={familyProvider ? 'unchecked' : 'checked'}
-                onPress={() => {
-                  setFamilyProvider(!familyProvider);
-                }}
-              />
-              <Text>Family Member</Text>
-            </View> */}
             {/* Button for login */}
             <Button
               mode="contained"

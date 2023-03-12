@@ -18,93 +18,74 @@ export const AppContextProvider = ({ children }) => {
   const [accountsInfo, setAccountsInfo] = useState({});
   const [isConnected, setIsConnected] = useState(false);
 
-  // Effect hook to listen for changes in user authentication state
   useEffect(() => {
-    const authStateChange = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        NetInfo.fetch().then((state) => {
-          if (state.isConnected) {
-            setLoggedIn(true);
-          }
-        });
-      }
-    });
+        // User is signed in
+        setCurrentUser(user);
+        const isConnected = await NetInfo.fetch().then(
+          (state) => state.isConnected
+        );
 
-    // Clean up function to unsubscribe from auth state changes
-    return () => {
-      authStateChange();
-    };
-  }, []);
+        if (isConnected) {
+          setIsConnected(true);
 
-  // Effect hook to fetch account details for the current user
-  useEffect(() => {
-    let isCancelled = false;
+          // Fetch account details for the new user
+          const docRef = doc(db, 'users', user.uid);
+          getDoc(docRef)
+            .then((docSnap) => {
+              if (docSnap.exists()) {
+                setAccountInfo(docSnap.data());
 
-    const getAccountDetails = async () => {
-      // Check that current user, database, and internet connection are available
-      if (!currentUser?.uid || !db || !isConnected) return;
+                // Listen for changes to the new user's family group
+                const familyGroupRef = doc(
+                  db,
+                  'familyGroup',
+                  docSnap.data().code
+                );
+                const familyGroupUnsubscribe = onSnapshot(
+                  familyGroupRef,
+                  (doc) => {
+                    setAccountsInfo(doc.data());
+                  }
+                );
 
-      try {
-        const docRef = doc(db, 'users', currentUser.uid);
-        const docSnap = await getDoc(docRef);
-
-        // If document exists and component is still mounted, update accountInfo state
-        if (!isCancelled && docSnap.exists()) {
-          setAccountInfo(docSnap.data());
+                // Set up cleanup function to unsubscribe from family group updates
+                return () => {
+                  familyGroupUnsubscribe();
+                };
+              }
+            })
+            .catch((error) => {
+              console.log('Error fetching account details:', error);
+            });
+        } else {
+          // User is online but Firebase is experiencing network errors
+          console.log(
+            'Firebase is experiencing network errors. Retrying in 5 seconds...'
+          );
+          setTimeout(() => {
+            // Retry fetching data
+            console.log('Retrying...');
+            unsubscribe();
+            unsubscribe();
+          }, 5000);
         }
-      } catch (error) {
-        console.error(error);
+      } else {
+        // User is signed out
+        setIsConnected(false);
+        setLoggedIn(false);
+        setCurrentUser({});
+        setAccountInfo({});
+        setAccountsInfo({});
       }
-    };
-
-    // Call getAccountDetails if current user is available and internet connection is present
-    currentUser?.uid && isConnected && getAccountDetails();
-
-    // Clean up function to prevent state updates if component is unmounted before getAccountDetails completes
-    return () => {
-      isCancelled = true;
-    };
-  }, [currentUser, db, isConnected]);
-
-  // Effect hook to listen for changes to the current account's family group
-  useEffect(() => {
-    // Check that accountInfo, accountInfo.code, database, and internet connection are available
-    if (!accountInfo || !accountInfo.code || !db || !isConnected) return;
-
-    let unsubscribe;
-
-    const updateFamilyGroup = async () => {
-      try {
-        const docRef = doc(db, 'familyGroup', accountInfo.code);
-        unsubscribe = onSnapshot(docRef, (doc) => {
-          setAccountsInfo(doc.data());
-        });
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    // Call updateFamilyGroup to start listening for updates
-    updateFamilyGroup();
-
-    // Clean up function to unsubscribe from family group updates
-    return () => {
-      unsubscribe && unsubscribe();
-    };
-  }, [accountInfo, db, isConnected]);
-
-  // Effect hook to listen for changes in internet connectivity
-  useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener((state) => {
-      setIsConnected(state.isConnected);
     });
 
-    // Clean up function to unsubscribe from internet connectivity updates
     return () => {
       unsubscribe();
     };
   }, []);
+
   // Provide context values to child components
   return (
     <AuthContext.Provider value={{ currentUser }}>

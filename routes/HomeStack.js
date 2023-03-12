@@ -1,5 +1,5 @@
 import { createStackNavigator } from '@react-navigation/stack';
-import SplashScreen from '../screens/SplashScreen';
+import QuickStartScreen from '../screens/QuickStartScreen';
 import SignInScreen from '../screens/SignInScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import HomeScreen from '../screens/HomeScreen';
@@ -8,6 +8,7 @@ import { useContext } from 'react';
 import TransactionScreen from '../screens/TransactionScreen';
 import RegistrationPromptScreen from '../screens/RegistrationPromptScreen';
 import CodeVerificationScreen from '../screens/CodeVerificationScreen';
+import OnboardingScreen from '../screens/OnboardingScreen';
 
 const Stack = createStackNavigator();
 
@@ -32,8 +33,13 @@ function HomeStack() {
       ) : (
         <Stack.Group>
           <Stack.Screen
-            name="SplashScreen"
-            component={SplashScreen}
+            name="OnboardingScreen"
+            component={OnboardingScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="QuickStartScreen"
+            component={QuickStartScreen}
             options={{ headerShown: false }}
           />
           <Stack.Screen

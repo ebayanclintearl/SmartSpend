@@ -83,6 +83,9 @@ export const formatDateAndTime = (date) => {
   return `${monthName} ${day}, ${year} - ${hours}:${minutes} ${ampm}`;
 };
 export const formatCurrency = (amount) => {
+  if (isNaN(amount)) {
+    return '0.00';
+  }
   return amount
     ?.toFixed(2)
     .replace(/\B(?=(\d{3})+(?!\d))/g, ',')

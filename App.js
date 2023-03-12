@@ -7,19 +7,36 @@ import {
 import { NavigationContainer } from '@react-navigation/native';
 import HomeStack from './routes/HomeStack';
 import { AppContextProvider } from './Helper/Context';
-import { useFonts } from 'expo-font';
+import * as Font from 'expo-font';
 import { fontConfig, fonts } from './Helper/FontConfig';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect, useState } from 'react';
+import AppSplashScreen from './screens/AppSplashScreen';
 export default function App() {
-  const [fontsLoaded] = useFonts(fonts);
+  const [isReady, setIsReady] = useState(false);
+  useEffect(() => {
+    const loadFonts = async () => {
+      try {
+        await SplashScreen.preventAutoHideAsync();
+        await Font.loadAsync(fonts);
+        setIsReady(true);
+        await SplashScreen.hideAsync();
+      } catch (e) {
+        console.warn(e);
+      }
+    };
+    loadFonts();
+  }, []);
+
+  if (!isReady) return null;
+
   const theme = {
     ...DefaultTheme,
     dark: false,
     mode: 'exact',
-    fonts: fontsLoaded
-      ? configureFonts({
-          config: fontConfig,
-        })
-      : configureFonts({}),
+    fonts: configureFonts({
+      config: fontConfig,
+    }),
     colors: {
       ...MD3LightTheme.colors,
       primary: '#38B6FF',

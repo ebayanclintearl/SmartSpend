@@ -131,9 +131,7 @@ export const validateSignUpInputs = (
   accountName,
   email,
   password,
-  confirmPassword,
-  familyCode,
-  familyProvider
+  confirmPassword
 ) => {
   if (!accountName.trim()) {
     return {
@@ -206,15 +204,6 @@ export const validateSignUpInputs = (
       errorPassword: false,
       errorConfirmPassword: true,
       errorFamilyCode: false,
-    };
-  } else if (!familyCode.trim() && !familyProvider) {
-    return {
-      errorMessage: 'Invalid Family Code',
-      errorAccountName: false,
-      errorEmail: false,
-      errorPassword: false,
-      errorConfirmPassword: false,
-      errorFamilyCode: true,
     };
   }
   return {

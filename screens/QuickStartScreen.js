@@ -1,20 +1,26 @@
 import React, { useContext } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, SafeAreaView, StyleSheet, View } from 'react-native';
 import { Text, Button, Card } from 'react-native-paper';
 import { AuthContext, LoginContext } from '../Helper/Context';
+import { StatusBar } from 'react-native';
 
-const SplashScreen = ({ navigation }) => {
+const QuickStartScreen = ({ navigation }) => {
   const { currentUser } = useContext(AuthContext);
   const { setLoggedIn } = useContext(LoginContext);
   const handleNavigation = () => {
-    if (currentUser) {
-      setLoggedIn(true);
-    } else {
+    if (Object.keys(currentUser).length === 0) {
       navigation.navigate('SignInScreen');
+    } else {
+      setLoggedIn(true);
     }
   };
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar
+        backgroundColor="#38B6FF"
+        barStyle="light-content"
+        translucent
+      />
       <View style={{ paddingHorizontal: '8%' }}>
         <Image
           resizeMode="contain"
@@ -50,11 +56,11 @@ const SplashScreen = ({ navigation }) => {
           Get Started Now
         </Button>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
-export default SplashScreen;
+export default QuickStartScreen;
 
 const styles = StyleSheet.create({
   container: {

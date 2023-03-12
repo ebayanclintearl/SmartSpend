@@ -13,7 +13,7 @@ import {
   Text,
 } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
-import { AccountContext } from '../Helper/Context';
+import { AccountContext, AuthContext } from '../Helper/Context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
   formatCurrency,
@@ -182,7 +182,6 @@ const HomeTabScreen = () => {
       )
     );
   };
-
   return (
     <>
       <Appbar.Header style={{ backgroundColor: '#FFFFFF' }}>
@@ -191,7 +190,7 @@ const HomeTabScreen = () => {
             <View style={{ flexDirection: 'row' }}>
               <Avatar.Text
                 size={35}
-                label={accountInfo?.name?.charAt(0)}
+                label={accountInfo?.name?.slice(0, 1)?.toUpperCase()}
                 style={{ backgroundColor: '#FFAF38', marginRight: 5 }}
                 labelStyle={{ color: 'white', top: 2 }}
               />

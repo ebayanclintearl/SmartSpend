@@ -1,4 +1,4 @@
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, StatusBar, StyleSheet, View } from 'react-native';
 import React, { useContext, useState } from 'react';
 import { Button, Text, TextInput, HelperText } from 'react-native-paper';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -52,6 +52,11 @@ const SignInScreen = () => {
     <>
       {/* SafeAreaView and KeyboardAwareScrollView from react-native libraries */}
       <SafeAreaView style={styles.container}>
+        <StatusBar
+          backgroundColor="#38B6FF"
+          barStyle="light-content"
+          translucent
+        />
         <KeyboardAwareScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <View
             style={{
