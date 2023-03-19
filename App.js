@@ -11,25 +11,7 @@ import * as Font from 'expo-font';
 import { fontConfig, fonts } from './Helper/FontConfig';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
-import AppSplashScreen from './screens/AppSplashScreen';
 export default function App() {
-  const [isReady, setIsReady] = useState(false);
-  useEffect(() => {
-    const loadFonts = async () => {
-      try {
-        await SplashScreen.preventAutoHideAsync();
-        await Font.loadAsync(fonts);
-        setIsReady(true);
-        await SplashScreen.hideAsync();
-      } catch (e) {
-        console.warn(e);
-      }
-    };
-    loadFonts();
-  }, []);
-
-  if (!isReady) return null;
-
   const theme = {
     ...DefaultTheme,
     dark: false,
@@ -43,6 +25,7 @@ export default function App() {
       primaryContainer: '#38B6FF',
       secondaryContainer: 'rgba(56,182,255,0.25)',
       background: '#FFFFFF',
+      backdrop: '#38B6FF',
     },
   };
   return (

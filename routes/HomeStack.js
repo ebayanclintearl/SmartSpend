@@ -4,16 +4,40 @@ import SignInScreen from '../screens/SignInScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import HomeScreen from '../screens/HomeScreen';
 import { LoginContext } from '../Helper/Context';
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import TransactionScreen from '../screens/TransactionScreen';
 import RegistrationPromptScreen from '../screens/RegistrationPromptScreen';
 import CodeVerificationScreen from '../screens/CodeVerificationScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Stack = createStackNavigator();
 
 function HomeStack() {
   const { loggedIn } = useContext(LoginContext);
+  const [onboardingComplete, setOnboardingComplete] = useState(false);
+  useEffect(() => {
+    // async function clearAsyncStorage() {
+    //   try {
+    //     await AsyncStorage.clear();
+    //     console.log('AsyncStorage cleared successfully!');
+    //   } catch (error) {
+    //     console.log(error);
+    //   }
+    // }
+    // clearAsyncStorage();
+    async function checkOnboardingStatus() {
+      try {
+        const value = await AsyncStorage.getItem('onboardingComplete');
+        if (value !== null && value === 'true') {
+          setOnboardingComplete(true);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    checkOnboardingStatus();
+  }, []);
 
   return (
     <Stack.Navigator>
@@ -32,11 +56,13 @@ function HomeStack() {
         </Stack.Group>
       ) : (
         <Stack.Group>
-          <Stack.Screen
-            name="OnboardingScreen"
-            component={OnboardingScreen}
-            options={{ headerShown: false }}
-          />
+          {!onboardingComplete && (
+            <Stack.Screen
+              name="OnboardingScreen"
+              component={OnboardingScreen}
+              options={{ headerShown: false }}
+            />
+          )}
           <Stack.Screen
             name="QuickStartScreen"
             component={QuickStartScreen}
