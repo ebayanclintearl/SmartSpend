@@ -29,7 +29,7 @@ const CodeVerificationScreen = () => {
     if (codeExist) {
       setShowloading(false);
       setError(false);
-      navigation.navigate('SignUpScreen', { familyCode: value });
+      navigation.navigate('SignUpScreen', { code: value });
     } else {
       setShowloading(false);
       setError(true);
@@ -37,9 +37,8 @@ const CodeVerificationScreen = () => {
     }
   };
   const handleCodeVerification = async (code) => {
-    const familyGroupRef = doc(db, 'familyGroup', code);
-    const docSnap = await getDoc(familyGroupRef);
-
+    const familyCodesRef = doc(db, 'familyCodes', code);
+    const docSnap = await getDoc(familyCodesRef);
     return docSnap.exists();
   };
   return (

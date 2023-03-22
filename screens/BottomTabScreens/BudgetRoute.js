@@ -34,13 +34,13 @@ import { handleAmountChange } from '../../Helper/FormatFunctions';
 import { expenseCategories } from '../../Helper/CategoriesData';
 import Pressable from 'react-native/Libraries/Components/Pressable/Pressable';
 import { validateBudgetInputs } from '../../Helper/Validation';
-import { AccountContext } from '../../Helper/Context';
+import { AccountContext, AppContext } from '../../Helper/Context';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import uuid from 'react-native-uuid';
 import { db } from '../../config';
 
 const BudgetRoute = () => {
-  const { accountInfo, accountsInfo } = useContext(AccountContext);
+  const { userAccount, familyCode } = useContext(AppContext);
   const [showLoading, setShowLoading] = useState(false);
   const [budgetName, setBudgetName] = useState('');
   const [amount, setAmount] = useState('');
@@ -84,16 +84,16 @@ const BudgetRoute = () => {
     if (validationResult.errorMessage) return;
     try {
       setShowLoading(true);
-      const docRef = doc(db, 'familyGroup', accountInfo?.code);
+      const docRef = doc(db, 'familyGroup', userAccount?.code);
 
       const { startDate, endDate } = getDateRange(dateRange.toLowerCase());
 
       const budget = {
-        name: accountInfo.name,
+        name: userAccount.name,
         budgetName: budgetName,
         amount: amount,
         dateRange: dateRange.toLowerCase(),
-        accountType: accountInfo.type,
+        accountType: userAccount.type,
         category: {
           title: category.title,
           icon: category.icon,
@@ -123,8 +123,8 @@ const BudgetRoute = () => {
   const handleSuggest = async () => {
     try {
       setShowLoading(true);
-      const docRef = doc(db, 'familyGroup', accountInfo?.code);
-      const budgetList = await createCategoryBudgets(accountsInfo, 100);
+      const docRef = doc(db, 'familyGroup', userAccount?.code);
+      const budgetList = await createCategoryBudgets(familyCode, 100);
       setDoc(
         docRef,
         {
@@ -181,7 +181,7 @@ const BudgetRoute = () => {
     return { startDate, endDate };
   }
   // Wait until the data is fetched, then extract the transactions and budgets
-  const { transactions = {}, budgets = {} } = accountsInfo || {};
+  const { transactions = {}, budgets = {} } = familyCode || {};
 
   // Filter transactions by date range
   function filterTransactionsByDateRange(transactions, timeRange, budget) {
@@ -239,14 +239,14 @@ const BudgetRoute = () => {
   const budgetSummaryForWeek = computeBudgetSummary('week');
   const budgetSummaryForMonth = computeBudgetSummary('month');
 
-  function getCategoryStatistics(accountsInfo, budget) {
-    // If accountsInfo is undefined, return an empty object
-    if (!accountsInfo) {
+  function getCategoryStatistics(familyCode, budget) {
+    // If familyCode is undefined, return an empty object
+    if (!familyCode) {
       return { distributed: {} };
     }
 
-    // Extract transaction categories from accountsInfo
-    const transactions = accountsInfo.transactions;
+    // Extract transaction categories from familyCode
+    const transactions = familyCode.transactions;
     const categoryTitles = Object.entries(transactions).map(
       ([transactionId, transaction]) => transaction.category.title
     );
@@ -304,11 +304,11 @@ const BudgetRoute = () => {
     return categoryStats.distributed;
   }
 
-  async function createCategoryBudgets(accountsInfo, budget) {
-    const categoryStats = getCategoryStatistics(accountsInfo, budget);
+  async function createCategoryBudgets(familyCode, budget) {
+    const categoryStats = getCategoryStatistics(familyCode, budget);
     const categoryBudgets = {};
 
-    if (!accountsInfo) {
+    if (!familyCode) {
       return categoryBudgets;
     }
     if (!categoryStats) {
@@ -321,11 +321,11 @@ const BudgetRoute = () => {
       const { startDate, endDate } = getDateRange('day');
 
       categoryBudgets[budgetId] = {
-        name: accountInfo.name,
+        name: userAccount.name,
         budgetName: `${categoryTitle} Budget`,
         amount: categoryData.value.toString(),
         dateRange: 'day',
-        accountType: accountInfo.type,
+        accountType: userAccount.type,
         category: {
           title: categoryTitle,
           icon: categoryData.icon,

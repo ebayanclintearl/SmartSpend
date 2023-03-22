@@ -31,7 +31,7 @@ import {
   setDoc,
   updateDoc,
 } from 'firebase/firestore';
-import { AccountContext } from '../Helper/Context';
+import { AccountContext, AppContext } from '../Helper/Context';
 import { db } from '../config';
 import {
   formatDateAndTime,
@@ -43,7 +43,8 @@ import { validateTransactionInputs } from '../Helper/Validation';
 
 const TransactionScreen = ({ route }) => {
   const navigation = useNavigation();
-  const transactionID = route.params ? route.params.transactionID : null;
+  const { transactionId } = route.params ?? {};
+  console.log(transactionId);
   const [date, setDate] = useState(new Date());
   const [dateString, setDateString] = useState('');
   const [amount, setAmount] = useState('');
@@ -60,26 +61,26 @@ const TransactionScreen = ({ route }) => {
     errorDescription: false,
     errorCategory: false,
   });
-  const { accountInfo, accountsInfo } = useContext(AccountContext);
+  const { userAccount, familyCode } = useContext(AppContext);
   const theme = useTheme();
 
   useEffect(() => {
-    if (transactionID) {
-      const transactionInfo = accountsInfo?.transactions[transactionID];
+    if (transactionId) {
+      const transactionInfo = familyCode?.familyExpenseHistory[transactionId];
       const { date, amount, description, category, type } = transactionInfo;
       currentDateAndTime(date.toDate());
-      setAmount(amount);
+      handleAmountChange(amount, setAmount);
       setDescription(description);
       setCategory(category);
       setSegmentValue(type);
     } else {
       currentDateAndTime(new Date());
     }
-    accountInfo?.type === 'member' && setSegmentValue('expense');
+    userAccount?.type === 'member' && setSegmentValue('expense');
   }, []);
 
   useEffect(() => {
-    if (transactionID) return;
+    if (transactionId) return;
     setCategory(null);
   }, [segmentValue]);
 
@@ -102,42 +103,44 @@ const TransactionScreen = ({ route }) => {
     );
     setError(validationResult);
     if (validationResult.errorMessage) return;
-
     try {
       setShowLoading(true);
-      const docRef = doc(db, 'familyGroup', accountInfo?.code);
+      const docRef = doc(db, 'familyCodes', userAccount?.code.toString());
 
       const transaction = {
-        name: accountInfo.name,
+        uid: userAccount.uid,
+        name: userAccount.name,
         date: date,
-        amount: amount,
+        amount: parseFloat(amount.replace(/,/g, '')),
         description: description,
-        accountType: accountInfo.type,
+        accountType: userAccount.type,
         type: segmentValue,
         category: {
           title: category.title,
           icon: category.icon,
+          color: category.color,
         },
       };
 
-      if (transactionID) {
+      if (transactionId) {
         await updateDoc(docRef, {
-          ['transactions.' + transactionID]: transaction,
+          ['familyExpenseHistory.' + transactionId]: transaction,
         });
+        navigation.navigate('HomeTabScreen');
       } else {
-        setDoc(
+        await setDoc(
           docRef,
           {
-            transactions: {
+            familyExpenseHistory: {
               [uuid.v4()]: transaction,
             },
           },
           { merge: true }
         );
+        navigation.pop();
       }
 
       setShowLoading(false);
-      navigation.pop();
     } catch (error) {
       console.error(error);
       setShowLoading(false);
@@ -179,18 +182,18 @@ const TransactionScreen = ({ route }) => {
             {
               value: 'income',
               label: 'Family Budget',
-              disabled: transactionID
+              disabled: transactionId
                 ? segmentValue === 'income'
                   ? false
                   : true
-                : accountInfo?.type === 'member'
+                : userAccount?.type === 'member'
                 ? true
                 : false,
             },
             {
               value: 'expense',
               label: 'Expense',
-              disabled: transactionID
+              disabled: transactionId
                 ? segmentValue === 'income'
                   ? true
                   : false
@@ -245,7 +248,7 @@ const TransactionScreen = ({ route }) => {
                 Amount *
               </Text>
               <TextInput
-                value={amount}
+                value={amount.toString()}
                 error={error.errorAmount}
                 style={{ width: '100%' }}
                 onChangeText={(value) => handleAmountChange(value, setAmount)}

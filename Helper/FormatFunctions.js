@@ -94,7 +94,9 @@ export const formatCurrency = (amount) => {
 
 export const handleAmountChange = (value, setAmount) => {
   // Remove all non-numeric characters from the input
-  const numericValue = value.replace(/[^0-9]/g, '');
+  const numericValue = isNaN(value)
+    ? value.replace(/[^0-9]/g, '')
+    : value.toString();
 
   // Check that the numeric value does not exceed 100 trillion
   const numericLimit = 100000000000;

@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import React, { useContext, useState } from 'react';
-import { AccountContext } from '../Helper/Context';
+import { AccountContext, AppContext } from '../Helper/Context';
 import { Appbar, Button, Text } from 'react-native-paper';
 import { formatCurrency, formatDateAndTime } from '../Helper/FormatFunctions';
 import { useNavigation } from '@react-navigation/native';
@@ -9,18 +9,18 @@ import { db } from '../config';
 
 const TransactionDetailScreen = ({ route }) => {
   const navigation = useNavigation();
-  const { transactionID } = route.params;
-  const { accountInfo, accountsInfo } = useContext(AccountContext);
-  const transactionInfo = accountsInfo?.transactions[transactionID];
+  const { transactionId } = route.params;
+  const { userAccount, familyCode } = useContext(AppContext);
+  const transactionInfo = familyCode?.familyExpenseHistory[transactionId];
   const [accountName, setAccountName] = useState(transactionInfo?.name);
   const [date, setDate] = useState(transactionInfo?.date);
   const [amount, setAmount] = useState(transactionInfo?.amount);
   const [description, setDescription] = useState(transactionInfo?.description);
   const [category, setCategory] = useState(transactionInfo?.category?.title);
   const handleRemove = async () => {
-    const docRef = doc(db, 'familyGroup', accountInfo?.code);
+    const docRef = doc(db, 'familyCodes', userAccount?.code.toString());
     await updateDoc(docRef, {
-      ['transactions.' + transactionID]: deleteField(),
+      ['familyExpenseHistory.' + transactionId]: deleteField(),
     });
     navigation.pop();
   };
@@ -36,7 +36,7 @@ const TransactionDetailScreen = ({ route }) => {
       <View style={styles.container}>
         <Text>Name {accountName}</Text>
         <Text>Transaction Date {formatDateAndTime(date.toDate())}</Text>
-        <Text>Amount {formatCurrency(parseInt(amount))}</Text>
+        <Text>Amount {amount}</Text>
         <Text>Description {description}</Text>
         <Text>Category {category}</Text>
         <Button mode="contained" onPress={() => handleRemove()}>
@@ -46,7 +46,7 @@ const TransactionDetailScreen = ({ route }) => {
           mode="contained"
           onPress={() =>
             navigation.navigate('TransactionScreen', {
-              transactionID: transactionID,
+              transactionId: transactionId,
             })
           }
         >

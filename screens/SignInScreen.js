@@ -1,9 +1,15 @@
 import { Image, StatusBar, StyleSheet, View } from 'react-native';
 import React, { useContext, useState } from 'react';
-import { Button, Text, TextInput, HelperText } from 'react-native-paper';
+import {
+  Button,
+  Text,
+  TextInput,
+  HelperText,
+  Snackbar,
+} from 'react-native-paper';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config';
-import { LoginContext } from '../Helper/Context';
+import { AppContext } from '../Helper/Context';
 import { validateSignInInputs } from '../Helper/Validation';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -14,8 +20,13 @@ const SignInScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showLoading, setShowLoading] = useState(false);
-  const { setLoggedIn } = useContext(LoginContext); // Use context from LoginContext
+  const { setLoggedIn } = useContext(AppContext); // Use context from AppContext
   const [secure, setSecure] = useState(true);
+  const [visible, setVisible] = useState(false);
+
+  const onToggleSnackBar = () => setVisible(!visible);
+  const onDismissSnackBar = () => setVisible(false);
+
   const [error, setError] = useState({
     errorMessage: '',
     errorEmail: false,
@@ -37,8 +48,9 @@ const SignInScreen = () => {
       setShowLoading(true);
       await signInWithEmailAndPassword(auth, email, password);
       setShowLoading(false);
-      setLoggedIn(true); // Set loggedIn state to true in LoginContext
+      setLoggedIn(true); // Set loggedIn state to true in AppContext
     } catch (error) {
+      console.log('SignIn', error.code);
       setError({
         errorMessage: 'Invalid email/password',
         errorEmail: false,
@@ -168,6 +180,9 @@ const SignInScreen = () => {
               >
                 R E G I S T E R
               </Button>
+              <Snackbar visible={visible} onDismiss={onDismissSnackBar}>
+                Hey there! I'm a Snackbar.
+              </Snackbar>
             </View>
           </View>
         </KeyboardAwareScrollView>

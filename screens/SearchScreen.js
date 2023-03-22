@@ -3,27 +3,28 @@ import React, { useContext, useState } from 'react';
 import { Appbar, List, Searchbar, Text } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { ScrollView } from 'react-native-gesture-handler';
-import { AccountContext } from '../Helper/Context';
+import { AppContext } from '../Helper/Context';
 
 const SearchScreen = () => {
   const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState('');
-  const { accountInfo, accountsInfo } = useContext(AccountContext);
+  const { userAccount, familyCode } = useContext(AppContext);
   const onChangeSearch = (query) => setSearchQuery(query);
 
   const filteredTransactions = (
-    accountsInfo.transactions && Object.entries(accountsInfo?.transactions)
+    familyCode.familyExpenseHistory &&
+    Object.entries(familyCode?.familyExpenseHistory)
   )
     ?.map(([key, transaction]) => {
       return { id: key, ...transaction };
     })
     .filter((transaction) => {
-      if (accountInfo.type === 'provider') {
+      if (userAccount.type === 'provider') {
         return (
           transaction.accountType === 'provider' ||
           transaction.accountType === 'member'
         );
-      } else if (accountInfo.type === 'member') {
+      } else if (userAccount.type === 'member') {
         return transaction.accountType === 'member';
       } else {
         return true;

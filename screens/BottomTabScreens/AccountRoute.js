@@ -12,6 +12,7 @@ import { signOut } from 'firebase/auth';
 import { auth, db } from '../../config';
 import {
   AccountContext,
+  AppContext,
   AuthContext,
   LoginContext,
 } from '../../Helper/Context';
@@ -27,9 +28,8 @@ import {
 } from 'firebase/firestore';
 
 export const AccountRoute = () => {
-  const { loggedIn, setLoggedIn } = useContext(LoginContext);
-  const { currentUser } = useContext(AuthContext);
-  const { accountInfo, accountsInfo } = useContext(AccountContext);
+  const { currentUser, setLoggedIn, userAccount, familyCode } =
+    useContext(AppContext);
   const [visible, setVisible] = useState(false);
   const hideDialog = () => setVisible(false);
 
@@ -54,10 +54,10 @@ export const AccountRoute = () => {
           </Dialog.Title>
           <Dialog.ScrollArea>
             <ScrollView contentContainerStyle={{ paddingHorizontal: 5 }}>
-              {accountsInfo &&
-                Object.entries(accountsInfo)
+              {familyCode &&
+                Object.entries(familyCode)
                   .filter(([, value]) =>
-                    accountInfo?.type === 'provider'
+                    userAccount?.type === 'provider'
                       ? value.type === 'member'
                       : value.type === 'provider'
                   )
@@ -87,10 +87,10 @@ export const AccountRoute = () => {
       <Text variant="headlineLarge">{currentUser?.displayName}</Text>
       <Text variant="headlineSmall">{currentUser?.email}</Text>
 
-      {accountInfo?.type === 'provider' ? (
+      {userAccount?.type === 'provider' ? (
         <>
           <Text variant="titleMedium">Family Provider</Text>
-          <Text variant="titleMedium">Family Code: {accountInfo?.code}</Text>
+          <Text variant="titleMedium">Family Code: {userAccount?.code}</Text>
           <Button
             onPress={() => {
               setVisible(true);

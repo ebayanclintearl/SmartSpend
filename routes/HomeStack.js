@@ -3,46 +3,28 @@ import QuickStartScreen from '../screens/QuickStartScreen';
 import SignInScreen from '../screens/SignInScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import HomeScreen from '../screens/HomeScreen';
-import { LoginContext } from '../Helper/Context';
+import { AppContext } from '../Helper/Context';
 import { useContext, useEffect, useState } from 'react';
 import TransactionScreen from '../screens/TransactionScreen';
 import RegistrationPromptScreen from '../screens/RegistrationPromptScreen';
 import CodeVerificationScreen from '../screens/CodeVerificationScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import SignUpSuccessScreen from '../screens/SignUpSuccessScreen';
 
 const Stack = createStackNavigator();
 
 function HomeStack() {
-  const { loggedIn } = useContext(LoginContext);
-  const [onboardingComplete, setOnboardingComplete] = useState(false);
-  useEffect(() => {
-    // async function clearAsyncStorage() {
-    //   try {
-    //     await AsyncStorage.clear();
-    //     console.log('AsyncStorage cleared successfully!');
-    //   } catch (error) {
-    //     console.log(error);
-    //   }
-    // }
-    // clearAsyncStorage();
-    async function checkOnboardingStatus() {
-      try {
-        const value = await AsyncStorage.getItem('onboardingComplete');
-        if (value !== null && value === 'true') {
-          setOnboardingComplete(true);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    }
-    checkOnboardingStatus();
-  }, []);
+  const { loggedIn, onboardingComplete } = useContext(AppContext);
 
   return (
     <Stack.Navigator>
       {loggedIn ? (
         <Stack.Group>
+          <Stack.Screen
+            name="SignUpSuccessScreen"
+            component={SignUpSuccessScreen}
+            options={{ headerShown: false }}
+          />
           <Stack.Screen
             name="HomeScreen"
             component={HomeScreen}
@@ -56,6 +38,11 @@ function HomeStack() {
         </Stack.Group>
       ) : (
         <Stack.Group>
+          <Stack.Screen
+            name="QuickStartScreen"
+            component={QuickStartScreen}
+            options={{ headerShown: false }}
+          />
           {!onboardingComplete && (
             <Stack.Screen
               name="OnboardingScreen"
@@ -63,11 +50,6 @@ function HomeStack() {
               options={{ headerShown: false }}
             />
           )}
-          <Stack.Screen
-            name="QuickStartScreen"
-            component={QuickStartScreen}
-            options={{ headerShown: false }}
-          />
           <Stack.Screen
             name="SignInScreen"
             component={SignInScreen}

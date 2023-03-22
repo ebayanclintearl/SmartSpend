@@ -1,18 +1,14 @@
+import { Image, StyleSheet, View } from 'react-native';
 import React, { useContext } from 'react';
-import { Image, SafeAreaView, StyleSheet, View } from 'react-native';
-import { Text, Button, Card } from 'react-native-paper';
+import { StatusBar } from 'expo-status-bar';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Text, Button } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
 import { AppContext } from '../Helper/Context';
-import { StatusBar } from 'react-native';
 
-const QuickStartScreen = ({ navigation }) => {
-  const { currentUser, setLoggedIn } = useContext(AppContext);
-  const handleNavigation = () => {
-    if (Object.keys(currentUser).length === 0) {
-      navigation.navigate('SignInScreen');
-    } else {
-      setLoggedIn(true);
-    }
-  };
+const SignUpSuccessScreen = () => {
+  const navigation = useNavigation();
+  const { currentUser } = useContext(AppContext);
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar
@@ -24,42 +20,52 @@ const QuickStartScreen = ({ navigation }) => {
         <Image
           resizeMode="contain"
           style={{ width: '80%', height: '40%', alignSelf: 'center' }}
-          source={require('../assets/AppAssets/splash_screen_icon.png')}
+          source={require('../assets/AppAssets/register_success_icon.png')}
         />
         <Text
           variant="displayMedium"
-          style={{ color: '#FFFFFF', alignSelf: 'center', padding: 10 }}
+          style={{
+            color: '#FFFFFF',
+            alignSelf: 'center',
+            padding: 10,
+            fontSize: 35,
+          }}
         >
-          SmartSpend
+          Welcome {currentUser?.displayName.split(' ')[0]}!
         </Text>
         <View style={{ paddingBottom: 30 }}>
           <Text
             variant="bodyMedium"
             style={{ fontSize: 14, color: '#FFFFFF', alignSelf: 'center' }}
           >
-            A Expense Tracking App
+            It seems everything went well
           </Text>
           <Text
             variant="bodyMedium"
             style={{ fontSize: 14, color: '#FFFFFF', alignSelf: 'center' }}
           >
-            Made For Families
+            SmartSpend is ready to work with you
           </Text>
         </View>
         <Button
           mode="elevated"
-          style={{ backgroundColor: '#FFFFFF', borderRadius: 5 }}
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: 5,
+            marginHorizontal: 25,
+          }}
           labelStyle={{ color: '#151940', fontSize: 16 }}
-          onPress={() => handleNavigation()}
+          contentStyle={{ paddingVertical: 5 }}
+          onPress={() => navigation.navigate('HomeScreen')}
         >
-          Get Started Now
+          Get Started
         </Button>
       </View>
     </SafeAreaView>
   );
 };
 
-export default QuickStartScreen;
+export default SignUpSuccessScreen;
 
 const styles = StyleSheet.create({
   container: {

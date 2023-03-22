@@ -4,7 +4,7 @@ import { TextInput, Button, Text, HelperText } from 'react-native-paper';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, db } from '../config';
 import { doc, getDocs, setDoc, updateDoc } from 'firebase/firestore';
-import { LoginContext } from '../Helper/Context';
+import { AppContext } from '../Helper/Context';
 import { collection, query, where } from 'firebase/firestore';
 import { validateSignUpInputs } from '../Helper/Validation';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,8 +12,8 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { useNavigation } from '@react-navigation/native';
 const SignUpScreen = ({ route }) => {
   const navigation = useNavigation();
-  const { familyCode } = route.params || {};
-  const { setLoggedIn } = useContext(LoginContext);
+  const { code } = route.params ?? {};
+  const { setLoggedIn } = useContext(AppContext);
   const [accountName, setAccountName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -53,33 +53,21 @@ const SignUpScreen = ({ route }) => {
       const res = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(res.user, { displayName: accountName });
 
-      const code = Math.floor(Math.random() * 90000) + 10000;
+      const generatedCode = Math.floor(Math.random() * 90000) + 10000;
       const userRef = doc(db, 'users', res.user.uid);
       await setDoc(userRef, {
         uid: res.user.uid,
         name: accountName,
         email: email,
-        type: familyCode ? 'member' : 'provider',
-        code: familyCode || code.toString(),
+        type: code ? 'member' : 'provider',
+        code: code ? parseInt(code) : generatedCode,
       });
 
-      if (familyCode) {
-        const familyGroupRef = doc(db, 'familyGroup', familyCode);
-        await updateDoc(familyGroupRef, {
-          [res.user.uid]: {
-            email: email,
-            name: accountName,
-            type: 'member',
-          },
-        });
-      } else {
-        const familyGroupRef = doc(db, 'familyGroup', code.toString());
-        await setDoc(familyGroupRef, {
-          [res.user.uid]: {
-            email: email,
-            name: accountName,
-            type: 'provider',
-          },
+      if (!code) {
+        const codeRef = doc(db, 'familyCodes', generatedCode.toString());
+        await setDoc(codeRef, {
+          familyExpenseHistory: {},
+          budgetAllocation: {},
         });
       }
 
@@ -87,6 +75,7 @@ const SignUpScreen = ({ route }) => {
       setLoggedIn(true);
       console.log('Done execution, sign up');
     } catch (error) {
+      console.log('SignUp', error.code);
       setShowLoading(false);
       if (error.code === 'auth/email-already-in-use') {
         setError({

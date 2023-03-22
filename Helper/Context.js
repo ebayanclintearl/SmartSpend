@@ -8,135 +8,129 @@ import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { View } from 'react-native';
 import { ActivityIndicator } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Create context objects
-export const AuthContext = createContext();
-export const LoginContext = createContext();
-export const AccountContext = createContext();
+// Create context object
+export const AppContext = createContext({
+  loggedIn: false,
+  currentUser: {},
+  userAccount: {},
+  familyCode: {},
+  isConnected: true,
+  onboardingComplete: false,
+});
 
 // Provider component that wraps the application and provides the context values
 export const AppContextProvider = ({ children }) => {
   // Define state variables for context values
   const [loggedIn, setLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState({});
-  const [accountInfo, setAccountInfo] = useState({});
-  const [accountsInfo, setAccountsInfo] = useState({});
-  const [isConnected, setIsConnected] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [userAccount, setUserAccount] = useState({});
+  const [familyCode, setFamilyCode] = useState({});
+  const [isConnected, setIsConnected] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isResourcesLoaded, setIsResourcesLoaded] = useState(false);
+  const [onboardingComplete, setOnboardingComplete] = useState(false);
 
   useEffect(() => {
-    const loadFontsAndFetchData = async () => {
+    const checkOnboardingStatus = async () => {
+      try {
+        const value = await AsyncStorage.getItem('onboardingComplete');
+        if (value !== null && value === 'true') {
+          setOnboardingComplete(true);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    const loadResources = async () => {
       try {
         await SplashScreen.preventAutoHideAsync();
         await Font.loadAsync(fonts);
+        await checkOnboardingStatus();
         await SplashScreen.hideAsync();
+        setIsResourcesLoaded(true);
       } catch (e) {
         console.warn(e);
       }
     };
 
-    loadFontsAndFetchData();
+    loadResources();
   }, []);
 
   useEffect(() => {
-    let unsubscribe;
-    let retryCount = 0;
-    const retryInterval = 5000; // 5 seconds
-    const maxRetryCount = 3; // Maximum number of retries
-
-    const fetchData = async (user) => {
-      try {
-        // Fetch account details for the new user
-        const docRef = doc(db, 'users', user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setAccountInfo(docSnap.data());
-
-          // Listen for changes to the new user's family group
-          const familyGroupRef = doc(db, 'familyGroup', docSnap.data().code);
-          const familyGroupUnsubscribe = onSnapshot(
-            familyGroupRef,
-            (doc) => {
-              setAccountsInfo(doc.data());
-            },
-            (error) => {
-              console.log('FamilyGroup error occurred2:', error.code);
-            }
-          );
-
-          // Set up cleanup function to unsubscribe from family group updates
-          return () => {
-            familyGroupUnsubscribe();
-          };
-        }
-      } catch (error) {
-        console.log('Error occurred2:', error.code);
-        // Retry fetching data if error is due to network issues and retry count is less than the maximum
-        if (error.code === 'unavailable' && retryCount < maxRetryCount) {
-          retryCount++;
-          console.log(
-            `Firebase is experiencing network errors. Retrying in ${
-              retryInterval / 1000
-            } seconds...`
-          );
-          setTimeout(() => {
-            console.log('Retrying...');
-            fetchData(user);
-          }, retryInterval);
-        }
-      } finally {
-        console.log('finally');
-        setIsLoading(false);
-      }
-    };
-
-    const authStateChanged = async (user) => {
-      try {
-        if (user) {
-          // User is signed in
-          setCurrentUser(user);
-          const isConnected = await NetInfo.fetch().then(
-            (state) => state.isConnected
-          );
-
-          if (isConnected) {
-            setIsConnected(true);
-            fetchData(user);
-          } else {
-            // User is online but Firebase is experiencing network errors
-            console.log(
-              'Firebase is experiencing network errors. Retrying in 5 seconds...'
-            );
-            setTimeout(() => {
-              // Retry fetching data
-              console.log('Retrying...');
-              unsubscribe();
-              unsubscribe();
-            }, retryInterval);
-          }
-        } else {
-          // User is signed out
-          setIsConnected(false);
-          setLoggedIn(false);
-          setCurrentUser({});
-          setAccountInfo({});
-          setAccountsInfo({});
-        }
-      } catch (error) {
-        console.log('Error occurred:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    unsubscribe = onAuthStateChanged(auth, authStateChanged);
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      setIsConnected(state.isConnected);
+    });
 
     return () => {
       unsubscribe();
     };
   }, []);
 
-  if (isLoading) {
+  const fetchOnlineData = async (userAuth) => {
+    try {
+      setIsLoading(true);
+      const userRef = doc(db, 'users', userAuth.uid);
+      const userDoc = await getDoc(userRef);
+
+      if (userDoc.exists()) {
+        const user = userDoc.data();
+        const codeRef = doc(db, 'familyCodes', user.code.toString());
+        const unsubscribe = onSnapshot(
+          codeRef,
+          (doc) => {
+            if (doc.exists()) {
+              setUserAccount(user);
+              setFamilyCode(doc.data());
+            } else {
+              setFamilyCode({});
+            }
+          },
+          (error) => {
+            console.log('FamilyCode error occurred:', error.code);
+          }
+        );
+        setIsLoading(false);
+        return () => unsubscribe();
+      }
+    } catch (error) {
+      console.log('Error fetching user:', error);
+      if (error.code === 'unavailable') {
+        console.log('Network Error while fetching the user');
+      }
+    }
+  };
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      try {
+        if (user) {
+          // User is signed in
+          setCurrentUser(user);
+          setLoggedIn(true);
+
+          if (isConnected) {
+            await fetchOnlineData(user);
+          } else {
+            console.log('no internet connection');
+          }
+        } else {
+          // User is signed out
+          setIsLoading(false);
+          setIsConnected(false);
+          setLoggedIn(false);
+          setCurrentUser({});
+          setUserAccount({});
+          setFamilyCode({});
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  if (!isResourcesLoaded || isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator animating={true} color="black" />
@@ -146,12 +140,22 @@ export const AppContextProvider = ({ children }) => {
 
   // Provide context values to child components
   return (
-    <AuthContext.Provider value={{ currentUser }}>
-      <LoginContext.Provider value={{ loggedIn, setLoggedIn }}>
-        <AccountContext.Provider value={{ accountInfo, accountsInfo }}>
-          {children}
-        </AccountContext.Provider>
-      </LoginContext.Provider>
-    </AuthContext.Provider>
+    <AppContext.Provider
+      value={{
+        loggedIn,
+        setLoggedIn,
+        currentUser,
+        setCurrentUser,
+        userAccount,
+        setUserAccount,
+        familyCode,
+        setFamilyCode,
+        isConnected,
+        setIsConnected,
+        onboardingComplete,
+      }}
+    >
+      {children}
+    </AppContext.Provider>
   );
 };

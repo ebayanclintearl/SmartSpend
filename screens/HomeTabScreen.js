@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StatusBar, StyleSheet, View } from 'react-native';
 import React, { useContext, useEffect, useState } from 'react';
 
 import {
@@ -13,7 +13,7 @@ import {
   Text,
 } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
-import { AccountContext, AuthContext } from '../Helper/Context';
+import { AppContext } from '../Helper/Context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
   formatCurrency,
@@ -57,7 +57,7 @@ const SegmentedButtons = ({ value, onValueChange, buttons }) => (
 );
 const HomeTabScreen = () => {
   const navigation = useNavigation();
-  const { accountInfo, accountsInfo } = useContext(AccountContext);
+  const { userAccount, familyCode } = useContext(AppContext);
   const [value, setValue] = useState('monthly');
   const [dateFilter, setDateFilter] = useState(new Date());
   const [totalBalance, setTotalBalance] = useState(0);
@@ -80,11 +80,11 @@ const HomeTabScreen = () => {
     }
   }, [value, setDateFilter]);
 
-  const filteredDateTransactions = (
-    accountsInfo?.transactions && Object.entries(accountsInfo.transactions)
+  const filteredByDateFamilyExpenseHistory = Object.entries(
+    familyCode?.familyExpenseHistory || {}
   )
     ?.filter(([key, transaction]) => {
-      const transactionDate = transaction.date.toDate();
+      const transactionDate = transaction?.date?.toDate();
       if (value === 'daily') {
         return (
           transactionDate.getDate() === dateFilter.getDate() &&
@@ -114,38 +114,18 @@ const HomeTabScreen = () => {
     })
     .map(([key, transaction]) => {
       return { id: key, ...transaction };
-    })
-    .filter((transaction) => {
-      if (accountInfo.type === 'provider') {
-        return (
-          transaction.accountType === 'provider' ||
-          transaction.accountType === 'member'
-        );
-      } else if (accountInfo.type === 'member') {
-        return transaction.accountType === 'member';
-      } else {
-        return [];
-      }
     });
 
   useEffect(() => {
     const calculateTotals = () => {
-      const income = filteredDateTransactions
+      const income = filteredByDateFamilyExpenseHistory
         ?.filter((transaction) => transaction.type === 'income')
-        .reduce(
-          (prev, curr) =>
-            prev + parseInt(curr.amount.replace(/[^0-9]/g, '').trim()),
-          0
-        );
+        .reduce((prev, curr) => prev + curr.amount, 0);
       setTotalIncome(income);
 
-      const expense = filteredDateTransactions
+      const expense = filteredByDateFamilyExpenseHistory
         ?.filter((transaction) => transaction.type === 'expense')
-        .reduce(
-          (prev, curr) =>
-            prev + parseInt(curr.amount.replace(/[^0-9]/g, '').trim()),
-          0
-        );
+        .reduce((prev, curr) => prev + curr.amount, 0);
       setTotalExpense(expense);
 
       const balance = totalIncome - totalExpense;
@@ -153,7 +133,7 @@ const HomeTabScreen = () => {
     };
 
     calculateTotals();
-  }, [filteredDateTransactions]);
+  }, [filteredByDateFamilyExpenseHistory]);
 
   const offsetMap = {
     daily: { days: 1 },
@@ -184,13 +164,18 @@ const HomeTabScreen = () => {
   };
   return (
     <>
+      <StatusBar
+        backgroundColor="#FFFFFF"
+        barStyle="dark-content"
+        translucent
+      />
       <Appbar.Header style={{ backgroundColor: '#FFFFFF' }}>
         <Appbar.Content
           title={
             <View style={{ flexDirection: 'row' }}>
               <Avatar.Text
                 size={35}
-                label={accountInfo?.name?.slice(0, 1)?.toUpperCase()}
+                label={userAccount?.name?.slice(0, 1)?.toUpperCase()}
                 style={{ backgroundColor: '#FFAF38', marginRight: 5 }}
                 labelStyle={{ color: 'white', top: 2 }}
               />
@@ -199,7 +184,7 @@ const HomeTabScreen = () => {
                   Welcome!
                 </Text>
                 <Text variant="titleSmall">
-                  {accountInfo?.name?.split(' ')[0]}
+                  {userAccount?.name?.split(' ')[0]}
                 </Text>
               </View>
             </View>
@@ -391,55 +376,68 @@ const HomeTabScreen = () => {
             >
               <Card.Content>
                 <Text variant="titleLarge">Expense History</Text>
-                {filteredDateTransactions?.map((transaction, index) => {
-                  return (
-                    <List.Item
-                      key={index}
-                      title={transaction.category.title}
-                      description={transaction.name}
-                      style={{
-                        backgroundColor: '#FFFFFF',
-                        borderRadius: 12,
-                        marginVertical: 5,
-                      }}
-                      left={(props) => (
-                        <List.Icon
-                          {...props}
-                          icon={() => (
-                            <Avatar.Icon
-                              size={45}
-                              icon={transaction.category.icon}
-                              color="#FFFFFF"
-                              style={{
-                                backgroundColor: '#30D398',
-                              }}
-                            />
-                          )}
-                        />
-                      )}
-                      right={(props) => (
-                        <Text
-                          {...props}
-                          style={{
-                            color:
-                              transaction.type === 'income'
-                                ? '#38B6FF'
-                                : '#FF4C38',
-                            fontWeight: 'bold',
-                            alignSelf: 'center',
-                          }}
-                        >
-                          {transaction.amount}
-                        </Text>
-                      )}
-                      onPress={() => {
-                        navigation.navigate('TransactionDetailScreen', {
-                          transactionID: transaction.id,
-                        });
-                      }}
-                    />
-                  );
-                })}
+                {filteredByDateFamilyExpenseHistory
+                  .filter((transaction) => {
+                    if (userAccount.type === 'provider') {
+                      return (
+                        transaction.accountType === 'provider' ||
+                        transaction.accountType === 'member'
+                      );
+                    } else if (userAccount.type === 'member') {
+                      return transaction.uid === userAccount.uid;
+                    } else {
+                      return [];
+                    }
+                  })
+                  ?.map((transaction, index) => {
+                    return (
+                      <List.Item
+                        key={index}
+                        title={transaction.category.title}
+                        description={transaction.name}
+                        style={{
+                          backgroundColor: '#FFFFFF',
+                          borderRadius: 12,
+                          marginVertical: 5,
+                        }}
+                        left={(props) => (
+                          <List.Icon
+                            {...props}
+                            icon={() => (
+                              <Avatar.Icon
+                                size={45}
+                                icon={transaction.category.icon}
+                                color="#FFFFFF"
+                                style={{
+                                  backgroundColor: transaction.category.color,
+                                }}
+                              />
+                            )}
+                          />
+                        )}
+                        right={(props) => (
+                          <Text
+                            {...props}
+                            style={{
+                              color:
+                                transaction.type === 'income'
+                                  ? '#38B6FF'
+                                  : '#FF4C38',
+                              fontWeight: 'bold',
+                              alignSelf: 'center',
+                            }}
+                          >
+                            {transaction.amount}
+                          </Text>
+                        )}
+                        onPress={() => {
+                          navigation.navigate('TransactionDetailScreen', {
+                            transactionId: transaction.id,
+                          });
+                        }}
+                      />
+                    );
+                  })}
                 <View style={{ width: '100%', height: 46 }}></View>
               </Card.Content>
             </Card>
