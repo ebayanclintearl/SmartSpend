@@ -10,10 +10,12 @@ import { validateSignUpInputs } from '../Helper/Validation';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useNavigation } from '@react-navigation/native';
+import randomColor from 'randomcolor';
+
 const SignUpScreen = ({ route }) => {
   const navigation = useNavigation();
   const { code } = route.params ?? {};
-  const { setLoggedIn } = useContext(AppContext);
+  const { setDisplaySignUpSuccess } = useContext(AppContext);
   const [accountName, setAccountName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -50,15 +52,18 @@ const SignUpScreen = ({ route }) => {
     // Attempt to sign up with Firebase FireStore
     try {
       setShowLoading(true);
+      setDisplaySignUpSuccess(true);
       const res = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(res.user, { displayName: accountName });
 
       const generatedCode = Math.floor(Math.random() * 90000) + 10000;
       const userRef = doc(db, 'users', res.user.uid);
+
       await setDoc(userRef, {
         uid: res.user.uid,
         name: accountName,
         email: email,
+        profileBackground: randomColor(),
         type: code ? 'member' : 'provider',
         code: code ? parseInt(code) : generatedCode,
       });
@@ -72,11 +77,11 @@ const SignUpScreen = ({ route }) => {
       }
 
       setShowLoading(false);
-      setLoggedIn(true);
       console.log('Done execution, sign up');
     } catch (error) {
       console.log('SignUp', error.code);
       setShowLoading(false);
+      setDisplaySignUpSuccess(false);
       if (error.code === 'auth/email-already-in-use') {
         setError({
           errorMessage: 'Email already in use',

@@ -14,17 +14,19 @@ import SignUpSuccessScreen from '../screens/SignUpSuccessScreen';
 const Stack = createStackNavigator();
 
 function HomeStack() {
-  const { loggedIn, onboardingComplete } = useContext(AppContext);
-
+  const { loggedIn, onboardingComplete, displaySignUpSuccess } =
+    useContext(AppContext);
   return (
     <Stack.Navigator>
       {loggedIn ? (
         <Stack.Group>
-          <Stack.Screen
-            name="SignUpSuccessScreen"
-            component={SignUpSuccessScreen}
-            options={{ headerShown: false }}
-          />
+          {displaySignUpSuccess && (
+            <Stack.Screen
+              name="SignUpSuccessScreen"
+              component={SignUpSuccessScreen}
+              options={{ headerShown: false }}
+            />
+          )}
           <Stack.Screen
             name="HomeScreen"
             component={HomeScreen}

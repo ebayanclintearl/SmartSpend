@@ -20,7 +20,6 @@ const SignInScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showLoading, setShowLoading] = useState(false);
-  const { setLoggedIn } = useContext(AppContext); // Use context from AppContext
   const [secure, setSecure] = useState(true);
   const [visible, setVisible] = useState(false);
 
@@ -48,7 +47,6 @@ const SignInScreen = () => {
       setShowLoading(true);
       await signInWithEmailAndPassword(auth, email, password);
       setShowLoading(false);
-      setLoggedIn(true); // Set loggedIn state to true in AppContext
     } catch (error) {
       console.log('SignIn', error.code);
       setError({

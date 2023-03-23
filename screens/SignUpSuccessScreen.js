@@ -8,7 +8,11 @@ import { AppContext } from '../Helper/Context';
 
 const SignUpSuccessScreen = () => {
   const navigation = useNavigation();
-  const { currentUser } = useContext(AppContext);
+  const { currentUser, setDisplaySignUpSuccess } = useContext(AppContext);
+  const handleSuccessButton = () => {
+    setDisplaySignUpSuccess(false);
+    navigation.navigate('HomeScreen');
+  };
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar
@@ -56,7 +60,7 @@ const SignUpSuccessScreen = () => {
           }}
           labelStyle={{ color: '#151940', fontSize: 16 }}
           contentStyle={{ paddingVertical: 5 }}
-          onPress={() => navigation.navigate('HomeScreen')}
+          onPress={() => handleSuccessButton()}
         >
           Get Started
         </Button>

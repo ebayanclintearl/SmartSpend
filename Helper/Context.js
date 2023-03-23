@@ -28,9 +28,10 @@ export const AppContextProvider = ({ children }) => {
   const [userAccount, setUserAccount] = useState({});
   const [familyCode, setFamilyCode] = useState({});
   const [isConnected, setIsConnected] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isResourcesLoaded, setIsResourcesLoaded] = useState(false);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [displaySignUpSuccess, setDisplaySignUpSuccess] = useState(false);
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
@@ -43,6 +44,7 @@ export const AppContextProvider = ({ children }) => {
         console.log(error);
       }
     };
+
     const loadResources = async () => {
       try {
         await SplashScreen.preventAutoHideAsync();
@@ -57,7 +59,6 @@ export const AppContextProvider = ({ children }) => {
 
     loadResources();
   }, []);
-
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
       setIsConnected(state.isConnected);
@@ -70,10 +71,8 @@ export const AppContextProvider = ({ children }) => {
 
   const fetchOnlineData = async (userAuth) => {
     try {
-      setIsLoading(true);
       const userRef = doc(db, 'users', userAuth.uid);
       const userDoc = await getDoc(userRef);
-
       if (userDoc.exists()) {
         const user = userDoc.data();
         const codeRef = doc(db, 'familyCodes', user.code.toString());
@@ -91,7 +90,6 @@ export const AppContextProvider = ({ children }) => {
             console.log('FamilyCode error occurred:', error.code);
           }
         );
-        setIsLoading(false);
         return () => unsubscribe();
       }
     } catch (error) {
@@ -107,10 +105,12 @@ export const AppContextProvider = ({ children }) => {
         if (user) {
           // User is signed in
           setCurrentUser(user);
-          setLoggedIn(true);
 
           if (isConnected) {
+            setIsLoading(true);
             await fetchOnlineData(user);
+            setIsLoading(false);
+            setLoggedIn(true);
           } else {
             console.log('no internet connection');
           }
@@ -130,7 +130,9 @@ export const AppContextProvider = ({ children }) => {
     return unsubscribe;
   }, []);
 
-  if (!isResourcesLoaded || isLoading) {
+  if (!isResourcesLoaded) {
+    return null;
+  } else if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator animating={true} color="black" />
@@ -152,6 +154,8 @@ export const AppContextProvider = ({ children }) => {
         setFamilyCode,
         isConnected,
         setIsConnected,
+        displaySignUpSuccess,
+        setDisplaySignUpSuccess,
         onboardingComplete,
       }}
     >

@@ -176,7 +176,10 @@ const HomeTabScreen = () => {
               <Avatar.Text
                 size={35}
                 label={userAccount?.name?.slice(0, 1)?.toUpperCase()}
-                style={{ backgroundColor: '#FFAF38', marginRight: 5 }}
+                style={{
+                  backgroundColor: userAccount?.profileBackground,
+                  marginRight: 5,
+                }}
                 labelStyle={{ color: 'white', top: 2 }}
               />
               <View>
@@ -391,51 +394,58 @@ const HomeTabScreen = () => {
                   })
                   ?.map((transaction, index) => {
                     return (
-                      <List.Item
+                      <View
                         key={index}
-                        title={transaction.category.title}
-                        description={transaction.name}
                         style={{
-                          backgroundColor: '#FFFFFF',
-                          borderRadius: 12,
-                          marginVertical: 5,
+                          backgroundColor: 'rgba(245, 246, 250, 0.8)',
+                          overflow: 'hidden',
+                          borderRadius: 10,
+                          margin: 5,
                         }}
-                        left={(props) => (
-                          <List.Icon
-                            {...props}
-                            icon={() => (
-                              <Avatar.Icon
-                                size={45}
-                                icon={transaction.category.icon}
-                                color="#FFFFFF"
-                                style={{
-                                  backgroundColor: transaction.category.color,
-                                }}
-                              />
-                            )}
-                          />
-                        )}
-                        right={(props) => (
-                          <Text
-                            {...props}
-                            style={{
-                              color:
-                                transaction.type === 'income'
-                                  ? '#38B6FF'
-                                  : '#FF4C38',
-                              fontWeight: 'bold',
-                              alignSelf: 'center',
-                            }}
-                          >
-                            {transaction.amount}
-                          </Text>
-                        )}
-                        onPress={() => {
-                          navigation.navigate('TransactionDetailScreen', {
-                            transactionId: transaction.id,
-                          });
-                        }}
-                      />
+                      >
+                        <List.Item
+                          title={transaction.description}
+                          description={transaction.name}
+                          style={{
+                            backgroundColor: '#FFFFFF',
+                          }}
+                          left={(props) => (
+                            <List.Icon
+                              {...props}
+                              icon={() => (
+                                <Avatar.Icon
+                                  size={45}
+                                  icon={transaction.category.icon}
+                                  color="#FFFFFF"
+                                  style={{
+                                    backgroundColor: transaction.category.color,
+                                  }}
+                                />
+                              )}
+                            />
+                          )}
+                          right={(props) => (
+                            <Text
+                              {...props}
+                              style={{
+                                color:
+                                  transaction.type === 'income'
+                                    ? '#38B6FF'
+                                    : '#FF4C38',
+                                fontWeight: 'bold',
+                                alignSelf: 'center',
+                              }}
+                            >
+                              {formatCurrency(transaction.amount)}
+                            </Text>
+                          )}
+                          onPress={() => {
+                            navigation.navigate('TransactionDetailScreen', {
+                              transactionId: transaction.id,
+                            });
+                          }}
+                        />
+                      </View>
                     );
                   })}
                 <View style={{ width: '100%', height: 46 }}></View>

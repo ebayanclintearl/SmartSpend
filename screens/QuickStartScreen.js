@@ -3,14 +3,16 @@ import { Image, SafeAreaView, StyleSheet, View } from 'react-native';
 import { Text, Button, Card } from 'react-native-paper';
 import { AppContext } from '../Helper/Context';
 import { StatusBar } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
-const QuickStartScreen = ({ navigation }) => {
-  const { currentUser, setLoggedIn } = useContext(AppContext);
+const QuickStartScreen = () => {
+  const navigation = useNavigation();
+  const { onboardingComplete } = useContext(AppContext);
   const handleNavigation = () => {
-    if (Object.keys(currentUser).length === 0) {
+    if (onboardingComplete) {
       navigation.navigate('SignInScreen');
     } else {
-      setLoggedIn(true);
+      navigation.navigate('OnboardingScreen');
     }
   };
   return (

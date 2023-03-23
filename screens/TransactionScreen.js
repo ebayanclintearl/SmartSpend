@@ -44,7 +44,6 @@ import { validateTransactionInputs } from '../Helper/Validation';
 const TransactionScreen = ({ route }) => {
   const navigation = useNavigation();
   const { transactionId } = route.params ?? {};
-  console.log(transactionId);
   const [date, setDate] = useState(new Date());
   const [dateString, setDateString] = useState('');
   const [amount, setAmount] = useState('');
