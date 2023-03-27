@@ -167,7 +167,7 @@ const HomeTabScreen = () => {
       <StatusBar
         backgroundColor="#FFFFFF"
         barStyle="dark-content"
-        translucent
+        translucent={false}
       />
       <Appbar.Header style={{ backgroundColor: '#FFFFFF' }}>
         <Appbar.Content

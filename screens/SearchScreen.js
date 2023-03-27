@@ -1,14 +1,16 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, TextInput as NativeTextInput } from 'react-native';
 import React, { useContext, useState } from 'react';
-import { Appbar, List, Searchbar, Text } from 'react-native-paper';
+import { Appbar, Avatar, List, Text, TextInput } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { AppContext } from '../Helper/Context';
+import { formatCurrency, hexToRgba } from '../Helper/FormatFunctions';
 
 const SearchScreen = () => {
   const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState('');
   const { userAccount, familyCode } = useContext(AppContext);
+
   const onChangeSearch = (query) => setSearchQuery(query);
 
   const filteredTransactions = (
@@ -51,21 +53,49 @@ const SearchScreen = () => {
   return (
     <>
       <Appbar.Header>
-        <Appbar.Content
-          title={
-            <Searchbar
-              placeholder="Search..."
-              onChangeText={onChangeSearch}
-              value={searchQuery}
-              elevation={0}
-            />
-          }
-        />
-        <Appbar.Action
-          icon={'close'}
+        <Appbar.BackAction
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: 'rgba(230, 230, 230, 0.56)',
+          }}
           onPress={() => {
             navigation.pop();
           }}
+        />
+        <Appbar.Content
+          title={
+            <TextInput
+              autoFocus={true}
+              mode="outlined"
+              placeholder="Search..."
+              value={searchQuery}
+              onChangeText={onChangeSearch}
+              outlineColor="#F5F6FA"
+              outlineStyle={{ borderRadius: 30 }}
+              activeOutlineColor={{ color: 'none' }}
+              style={{
+                marginVertical: 5,
+                backgroundColor: '#F5F6FA',
+              }}
+              render={(props) => (
+                <NativeTextInput
+                  {...props}
+                  returnKeyType="search"
+                  keyboardAppearance="dark"
+                />
+              )}
+              right={
+                <TextInput.Icon
+                  icon="close"
+                  iconColor="#7F8192"
+                  forceTextInputFocus={false}
+                  onPress={() => setSearchQuery('')}
+                />
+              }
+            />
+          }
         />
       </Appbar.Header>
       <View style={styles.container}>
@@ -78,25 +108,47 @@ const SearchScreen = () => {
                     key={index}
                     title={transaction.category.title}
                     description={`${transaction.name}\n${transaction.description}`}
+                    style={{
+                      backgroundColor: hexToRgba(
+                        transaction.category.color,
+                        0.1
+                      ),
+                      borderRadius: 12,
+                      margin: 5,
+                    }}
                     left={(props) => (
-                      <List.Icon {...props} icon={transaction.category.icon} />
+                      <List.Icon
+                        {...props}
+                        icon={() => (
+                          <Avatar.Icon
+                            size={45}
+                            icon={transaction.category.icon}
+                            color="#FFFFFF"
+                            style={{
+                              backgroundColor: transaction.category.color,
+                            }}
+                          />
+                        )}
+                      />
                     )}
                     right={(props) => (
                       <Text
                         {...props}
                         style={{
                           color:
-                            transaction.type === 'income' ? 'green' : 'red',
+                            transaction.type === 'income'
+                              ? '#38B6FF'
+                              : '#FF4C38',
                           fontWeight: 'bold',
                           alignSelf: 'center',
                         }}
                       >
-                        {transaction.amount}
+                        {formatCurrency(transaction.amount)}
                       </Text>
                     )}
                     onPress={() => {
                       navigation.navigate('TransactionDetailScreen', {
-                        transactionID: transaction.id,
+                        transactionId: transaction.id,
                       });
                     }}
                   />
@@ -114,5 +166,6 @@ export default SearchScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
   },
 });

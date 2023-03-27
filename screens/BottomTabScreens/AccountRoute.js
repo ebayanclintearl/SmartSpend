@@ -29,6 +29,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { StatusBar } from 'expo-status-bar';
+import { hexToRgba } from '../../Helper/FormatFunctions';
 
 export const AccountRoute = () => {
   const [accounts, setAccounts] = useState();
@@ -66,8 +67,8 @@ export const AccountRoute = () => {
     <>
       <StatusBar
         backgroundColor="#FFFFFF"
-        barStyle="light-content"
-        translucent
+        barStyle="dark-content"
+        translucent={false}
       />
       <Appbar.Header
         mode="center-aligned"
@@ -100,7 +101,7 @@ export const AccountRoute = () => {
                 width: '100%',
                 justifyContent: 'center',
                 alignItems: 'center',
-                backgroundColor: '#F5F6FA',
+                backgroundColor: hexToRgba(userAccount?.profileBackground, 0.1),
                 padding: 10,
                 marginVertical: 8,
                 borderRadius: 12,
@@ -113,11 +114,11 @@ export const AccountRoute = () => {
                   backgroundColor: userAccount?.profileBackground,
                   margin: 5,
                 }}
-                labelStyle={{ color: 'white', top: 1, fontSize: 45 }}
+                labelStyle={{ color: '#FFFFFF', top: 1, fontSize: 45 }}
               />
               <Text
-                variant="displayMedium"
-                style={{ color: '#151940', fontSize: 40 }}
+                variant="displaySmall"
+                style={{ color: '#151940', fontSize: 25 }}
               >
                 {userAccount?.name}
               </Text>
@@ -145,54 +146,67 @@ export const AccountRoute = () => {
               Linked Account(s)
             </Text>
             {accounts &&
-              accounts?.map((account) => (
-                <List.Item
-                  key={account.uid}
-                  title={account.name}
-                  description={account.email}
-                  style={{
-                    backgroundColor: '#F5F6FA',
-                    borderRadius: 12,
-                    margin: 5,
-                  }}
-                  left={(props) => (
-                    <List.Icon
-                      {...props}
-                      icon={() => (
-                        <Avatar.Icon
-                          size={45}
-                          icon="account"
-                          color="#FFFFFF"
-                          style={{
-                            backgroundColor: account.profileBackground,
-                          }}
-                        />
-                      )}
-                    />
-                  )}
-                  right={(props) => (
-                    <View
-                      style={{
-                        backgroundColor: '#FFFFFF',
-                        width: 50,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        borderRadius: 12,
-                      }}
-                    >
-                      {account.type === 'provider' ? (
-                        <Text variant="labelLarge" style={{ color: '#FF4C38' }}>
-                          P
-                        </Text>
-                      ) : (
-                        <Text variant="labelLarge" style={{ color: '#38B6FF' }}>
-                          M
-                        </Text>
-                      )}
-                    </View>
-                  )}
-                />
-              ))}
+              accounts
+                ?.filter((account) => account.type !== userAccount.type)
+                .map((account) => (
+                  <List.Item
+                    key={account.uid}
+                    title={account.name}
+                    description={account.email}
+                    descriptionNumberOfLines={1}
+                    descriptionEllipsizeMode="tail"
+                    style={{
+                      backgroundColor: hexToRgba(
+                        account.profileBackground,
+                        0.1
+                      ),
+                      borderRadius: 12,
+                      margin: 5,
+                    }}
+                    left={(props) => (
+                      <List.Icon
+                        {...props}
+                        icon={() => (
+                          <Avatar.Icon
+                            size={45}
+                            icon="account"
+                            color="#FFFFFF"
+                            style={{
+                              backgroundColor: account.profileBackground,
+                            }}
+                          />
+                        )}
+                      />
+                    )}
+                    right={(props) => (
+                      <View
+                        style={{
+                          backgroundColor: '#FFFFFF',
+                          width: 50,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          borderRadius: 12,
+                        }}
+                      >
+                        {account.type === 'provider' ? (
+                          <Text
+                            variant="labelLarge"
+                            style={{ color: '#FF4C38' }}
+                          >
+                            P
+                          </Text>
+                        ) : (
+                          <Text
+                            variant="labelLarge"
+                            style={{ color: '#38B6FF' }}
+                          >
+                            M
+                          </Text>
+                        )}
+                      </View>
+                    )}
+                  />
+                ))}
           </View>
         </ScrollView>
       </View>
@@ -203,5 +217,6 @@ export const AccountRoute = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
   },
 });

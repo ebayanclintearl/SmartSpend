@@ -5,6 +5,7 @@ import {
   TouchableWithoutFeedback,
   TextInput as NativeTextInput,
   TouchableOpacity,
+  StatusBar,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import {
@@ -16,7 +17,6 @@ import {
   Text,
   Surface,
   List,
-  SegmentedButtons,
   useTheme,
   HelperText,
 } from 'react-native-paper';
@@ -40,7 +40,57 @@ import {
 import uuid from 'react-native-uuid';
 import { useNavigation } from '@react-navigation/native';
 import { validateTransactionInputs } from '../Helper/Validation';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+const SegmentedButtons = ({ value, onValueChange, buttons }) => (
+  <View
+    style={{
+      flexDirection: 'row',
+      width: '100%',
+      justifyContent: 'space-between',
+      marginTop: 5,
+      marginBottom: 15,
+    }}
+  >
+    {buttons.map(({ value: buttonValue, label, disabled }) => (
+      <Button
+        key={buttonValue}
+        mode="contained"
+        contentStyle={{ padding: 3 }}
+        style={
+          value === buttonValue
+            ? {
+                backgroundColor:
+                  buttonValue === 'income'
+                    ? '#38B6FF'
+                    : buttonValue === 'expense'
+                    ? '#FF4C38'
+                    : '#F5F6FA',
+                borderRadius: 8,
+                width: '49%',
+              }
+            : {
+                backgroundColor: '#F5F6FA',
+                borderRadius: 8,
+                width: '49%',
+              }
+        }
+        labelStyle={{
+          color:
+            value === buttonValue
+              ? '#FFFFFF'
+              : disabled
+              ? '#7F8192'
+              : '#151940',
+        }}
+        onPress={() => onValueChange(buttonValue)}
+        disabled={disabled}
+      >
+        {label}
+      </Button>
+    ))}
+  </View>
+);
 const TransactionScreen = ({ route }) => {
   const navigation = useNavigation();
   const { transactionId } = route.params ?? {};
@@ -150,7 +200,21 @@ const TransactionScreen = ({ route }) => {
     <List.Item
       key={item.id}
       title={item.title}
-      left={(props) => <List.Icon {...props} icon={item.icon} />}
+      left={(props) => (
+        <List.Icon
+          {...props}
+          icon={() => (
+            <Avatar.Icon
+              size={45}
+              icon={item.icon}
+              color="#FFFFFF"
+              style={{
+                backgroundColor: item.color,
+              }}
+            />
+          )}
+        />
+      )}
       onPress={() => {
         setCategory(item);
         handleCategoryPress();
@@ -159,50 +223,35 @@ const TransactionScreen = ({ route }) => {
   );
   return (
     <>
-      <Appbar.Header>
+      <StatusBar
+        backgroundColor="#FFFFFF"
+        barStyle="dark-content"
+        translucent={false}
+      />
+      <Appbar.Header
+        mode="center-aligned"
+        style={{ backgroundColor: '#FFFFFF' }}
+      >
         <Appbar.BackAction
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: 'rgba(230, 230, 230, 0.56)',
+          }}
           onPress={() => {
             navigation.pop();
           }}
         />
-      </Appbar.Header>
-
-      <View
-        style={{
-          paddingHorizontal: 10,
-          paddingBottom: 10,
-          backgroundColor: theme.colors.onPrimary,
-        }}
-      >
-        <SegmentedButtons
-          value={segmentValue}
-          onValueChange={setSegmentValue}
-          buttons={[
-            {
-              value: 'income',
-              label: 'Family Budget',
-              disabled: transactionId
-                ? segmentValue === 'income'
-                  ? false
-                  : true
-                : userAccount?.type === 'member'
-                ? true
-                : false,
-            },
-            {
-              value: 'expense',
-              label: 'Expense',
-              disabled: transactionId
-                ? segmentValue === 'income'
-                  ? true
-                  : false
-                : false,
-            },
-          ]}
-          style={{ border: 'none' }}
+        <Appbar.Content
+          title={
+            <Text variant="labelLarge" style={{ fontSize: 24, lineHeight: 30 }}>
+              {transactionId ? 'EDIT' : 'ADD'}
+            </Text>
+          }
         />
-      </View>
-      <SafeAreaProvider style={{ zIndex: -1 }}>
+      </Appbar.Header>
+      <SafeAreaProvider>
         <DateTimePickerModal
           date={date}
           isVisible={isDatePickerVisible}
@@ -210,27 +259,57 @@ const TransactionScreen = ({ route }) => {
           onConfirm={handleDateConfirm}
           onCancel={() => setDatePickerVisibility(false)}
         />
-        <ScrollView>
-          <View style={styles.container}>
-            <View
-              style={{
-                justifyContent: 'center',
-                width: '90%',
-              }}
-            >
+        <View style={styles.container}>
+          <ScrollView>
+            <View style={{ paddingHorizontal: '3%' }}>
+              <SegmentedButtons
+                value={segmentValue}
+                onValueChange={setSegmentValue}
+                buttons={[
+                  {
+                    value: 'income',
+                    label: 'Family Budget',
+                    disabled: transactionId
+                      ? segmentValue === 'income'
+                        ? false
+                        : true
+                      : userAccount?.type === 'member'
+                      ? true
+                      : false,
+                  },
+                  {
+                    value: 'expense',
+                    label: 'Expense',
+                    disabled: transactionId
+                      ? segmentValue === 'income'
+                        ? true
+                        : false
+                      : false,
+                  },
+                ]}
+              />
+
               <TouchableWithoutFeedback
                 onPress={() => setDatePickerVisibility(true)}
               >
                 <View style={{ width: '100%' }}>
-                  <Text variant="titleSmall" style={{ fontWeight: 'bold' }}>
-                    Date and time *
-                  </Text>
                   <TextInput
+                    mode="outlined"
+                    label="Date & Time"
+                    outlineColor="#F5F6FA"
+                    outlineStyle={{ borderRadius: 5 }}
                     value={dateString}
                     editable={false}
+                    style={{
+                      marginVertical: 5,
+                      backgroundColor: '#F5F6FA',
+                    }}
                     right={
                       <TextInput.Icon
-                        icon="calendar"
+                        icon={({ size }) => (
+                          <Icon name="calendar" size={size} color="#7F8192" />
+                        )}
+                        disabled={true}
                         forceTextInputFocus={false}
                       />
                     }
@@ -243,20 +322,29 @@ const TransactionScreen = ({ route }) => {
                 </HelperText>
               )}
 
-              <Text variant="titleSmall" style={{ fontWeight: 'bold' }}>
-                Amount *
-              </Text>
               <TextInput
+                mode="outlined"
+                label="Amount"
+                outlineColor="#F5F6FA"
+                outlineStyle={{ borderRadius: 5 }}
+                activeOutlineColor="#151940"
                 value={amount.toString()}
                 error={error.errorAmount}
-                style={{ width: '100%' }}
+                style={{
+                  marginVertical: 5,
+                  backgroundColor: '#F5F6FA',
+                  width: '100%',
+                }}
                 onChangeText={(value) => handleAmountChange(value, setAmount)}
                 render={(props) => (
                   <NativeTextInput {...props} keyboardType={'numeric'} />
                 )}
                 right={
                   <TextInput.Icon
-                    icon="currency-php"
+                    icon={({ size }) => (
+                      <Icon name="currency-php" size={size} color="#7F8192" />
+                    )}
+                    disabled={true}
                     forceTextInputFocus={false}
                   />
                 }
@@ -267,16 +355,32 @@ const TransactionScreen = ({ route }) => {
                 </HelperText>
               )}
 
-              <Text variant="titleSmall" style={{ fontWeight: 'bold' }}>
-                Description *
-              </Text>
               <TextInput
+                mode="outlined"
+                label="Description"
+                outlineColor="#F5F6FA"
+                outlineStyle={{ borderRadius: 5 }}
+                activeOutlineColor="#151940"
                 value={description}
                 error={error.errorDescription}
-                style={{ width: '100%' }}
+                style={{
+                  marginVertical: 5,
+                  backgroundColor: '#F5F6FA',
+                  width: '100%',
+                }}
                 onChangeText={(description) => setDescription(description)}
                 right={
-                  <TextInput.Icon icon="note" forceTextInputFocus={false} />
+                  <TextInput.Icon
+                    icon={({ size }) => (
+                      <Icon
+                        name="note-plus-outline"
+                        size={size}
+                        color="#7F8192"
+                      />
+                    )}
+                    disabled={true}
+                    forceTextInputFocus={false}
+                  />
                 }
               />
               {error.errorDescription && (
@@ -288,16 +392,27 @@ const TransactionScreen = ({ route }) => {
               <View style={{ alignItems: 'center' }}>
                 <TouchableWithoutFeedback onPress={() => handleCategoryPress()}>
                   <View style={{ width: '100%' }}>
-                    <Text variant="titleSmall" style={{ fontWeight: 'bold' }}>
-                      Category *
-                    </Text>
                     <TextInput
+                      mode="outlined"
+                      outlineColor="#F5F6FA"
+                      outlineStyle={{ borderRadius: 5 }}
                       value={category ? category.title : 'Select Category'}
                       error={error.errorCategory}
+                      style={{
+                        marginVertical: 5,
+                        backgroundColor: '#F5F6FA',
+                      }}
                       editable={false}
                       right={
                         <TextInput.Icon
-                          icon="chevron-down-box-outline"
+                          icon={({ size }) => (
+                            <Icon
+                              name="chevron-down"
+                              size={size + 10}
+                              color="#7F8192"
+                            />
+                          )}
+                          disabled={true}
                           forceTextInputFocus={false}
                         />
                       }
@@ -316,33 +431,32 @@ const TransactionScreen = ({ route }) => {
                   ]}
                   elevation={2}
                 >
-                  <ScrollView style={{ width: '100%' }}>
+                  <ScrollView style={{ flex: 1, width: '100%' }}>
                     {segmentValue === 'income'
                       ? incomeCategories.map(renderCategoryItems)
                       : expenseCategories.map(renderCategoryItems)}
                   </ScrollView>
                 </Surface>
               </View>
+              <Button
+                mode="contained"
+                compact={true}
+                loading={showLoading}
+                buttonColor={segmentValue === 'income' ? '#38B6FF' : '#FF4C38'}
+                onPress={() => handleSave()}
+                contentStyle={{ padding: 3 }}
+                style={{
+                  borderRadius: 5,
+                  display: expanded ? 'none' : 'flex',
+                  marginVertical: 30,
+                }}
+              >
+                Save
+              </Button>
             </View>
-          </View>
-        </ScrollView>
+          </ScrollView>
+        </View>
       </SafeAreaProvider>
-      <View
-        style={{
-          padding: 10,
-          backgroundColor: theme.colors.inverseOnSurface,
-        }}
-      >
-        <Button
-          mode="contained"
-          compact={true}
-          loading={showLoading}
-          buttonColor={segmentValue === 'income' ? '#028a0f' : '#a91b0d'}
-          onPress={() => handleSave()}
-        >
-          Save
-        </Button>
-      </View>
     </>
   );
 };
@@ -352,8 +466,7 @@ export default TransactionScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
   },
   surface: {
     padding: 8,
@@ -362,5 +475,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
   },
 });

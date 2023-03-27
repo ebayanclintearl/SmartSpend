@@ -48,6 +48,7 @@ const BudgetRoute = () => {
   const [category, setCategory] = useState(null);
   const [expandedDateRange, setExpandedDateRange] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState(false);
+  const [isBackdropEnabled, setIsBackdropEnabled] = useState(false);
   const [error, setError] = useState({
     errorMessage: '',
     errorBudgetName: false,
@@ -64,11 +65,23 @@ const BudgetRoute = () => {
     console.log('handleSheetChange', index);
   }, []);
   const handleSnapPress = useCallback((index) => {
+    setIsBackdropEnabled(true);
     sheetRef.current?.snapToIndex(index);
   }, []);
   const handleClosePress = useCallback(() => {
+    setIsBackdropEnabled(false);
     sheetRef.current?.close();
   }, []);
+
+  // backdrop for bottom sheets
+  const renderBackdrop = () => (
+    <View
+      style={{
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      }}
+    />
+  );
 
   const handleDateRangePress = () => setExpandedDateRange(!expandedDateRange);
   const handleCategoryPress = () => setExpandedCategory(!expandedCategory);
@@ -406,6 +419,7 @@ const BudgetRoute = () => {
         index={-1}
         snapPoints={snapPoints}
         onChange={handleSheetChange}
+        backdropComponent={isBackdropEnabled ? renderBackdrop : null}
         footerComponent={() => (
           <View
             style={{

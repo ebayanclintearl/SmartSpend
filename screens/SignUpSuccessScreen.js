@@ -35,7 +35,7 @@ const SignUpSuccessScreen = () => {
             fontSize: 35,
           }}
         >
-          Welcome {currentUser?.displayName.split(' ')[0]}!
+          Welcome {currentUser?.displayName?.split(' ')[0]}!
         </Text>
         <View style={{ paddingBottom: 30 }}>
           <Text

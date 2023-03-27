@@ -4,6 +4,7 @@ import { BottomNavigation, Text, useTheme } from 'react-native-paper';
 import { AccountRoute } from './BottomTabScreens/AccountRoute';
 import { HomeRoute } from './BottomTabScreens/HomeRoute';
 import BudgetRoute from './BottomTabScreens/BudgetRoute';
+import BudgetScreen from './BudgetScreen';
 
 const HomeScreen = () => {
   const theme = useTheme();
@@ -28,7 +29,7 @@ const HomeScreen = () => {
   const renderScene = BottomNavigation.SceneMap({
     home: HomeRoute,
     account: AccountRoute,
-    budget: BudgetRoute,
+    budget: BudgetScreen,
   });
   return (
     <BottomNavigation

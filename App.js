@@ -25,7 +25,6 @@ export default function App() {
       primaryContainer: '#38B6FF',
       secondaryContainer: 'rgba(56,182,255,0.25)',
       background: '#FFFFFF',
-      backdrop: '#38B6FF',
     },
   };
   return (

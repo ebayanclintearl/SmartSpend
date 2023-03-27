@@ -139,3 +139,12 @@ export const handleAmountChange = (value, setAmount) => {
   // Update the state with the formatted value
   setAmount(formattedValue);
 };
+
+// Convert a hexadecimal color code to an RGBA color code with the specified opacity.
+export const hexToRgba = (hex, alpha) => {
+  if (!hex) return;
+  const r = parseInt(hex.slice(1, 3), 16); // Convert the red component of the hexadecimal color code to decimal.
+  const g = parseInt(hex.slice(3, 5), 16); // Convert the green component of the hexadecimal color code to decimal.
+  const b = parseInt(hex.slice(5, 7), 16); // Convert the blue component of the hexadecimal color code to decimal.
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`; // Return the RGBA color code with the specified opacity.
+};
