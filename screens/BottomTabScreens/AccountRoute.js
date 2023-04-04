@@ -1,4 +1,4 @@
-import { Image, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, View, StatusBar } from 'react-native';
 import {
   Appbar,
   Avatar,
@@ -28,7 +28,6 @@ import {
   query,
   where,
 } from 'firebase/firestore';
-import { StatusBar } from 'expo-status-bar';
 import { hexToRgba } from '../../Helper/FormatFunctions';
 
 export const AccountRoute = () => {

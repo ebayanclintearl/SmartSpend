@@ -63,23 +63,23 @@ export const validateTransactionInputs = (
   };
 };
 export const validateBudgetInputs = (
-  budgetName,
+  description,
   amount,
   dateRange,
   category
 ) => {
-  if (!budgetName.trim()) {
+  if (!description.trim()) {
     return {
-      errorMessage: 'Empty Budget Name',
-      errorBudgetName: true,
+      errorMessage: 'Empty description',
+      errorDescription: true,
       errorAmount: false,
       errorDateRange: false,
       errorCategory: false,
     };
-  } else if (budgetName.trim().length > 30) {
+  } else if (description.trim().length > 30) {
     return {
       errorMessage: 'Budget name should not exceed 30 characters',
-      errorBudgetName: true,
+      errorDescription: true,
       errorAmount: false,
       errorDateRange: false,
       errorCategory: false,
@@ -87,7 +87,7 @@ export const validateBudgetInputs = (
   } else if (!amount.trim()) {
     return {
       errorMessage: 'Empty amount',
-      errorBudgetName: false,
+      errorDescription: false,
       errorAmount: true,
       errorDateRange: false,
       errorCategory: false,
@@ -96,7 +96,7 @@ export const validateBudgetInputs = (
     return {
       errorMessage:
         'Amount should be a valid number without any other characters',
-      errorBudgetName: false,
+      errorDescription: false,
       errorAmount: true,
       errorDateRange: false,
       errorCategory: false,
@@ -104,7 +104,7 @@ export const validateBudgetInputs = (
   } else if (!dateRange.trim()) {
     return {
       errorMessage: 'Empty Date Range',
-      errorBudgetName: false,
+      errorDescription: false,
       errorAmount: false,
       errorDateRange: true,
       errorCategory: false,
@@ -112,7 +112,7 @@ export const validateBudgetInputs = (
   } else if (category === null) {
     return {
       errorMessage: 'Empty category',
-      errorBudgetName: false,
+      errorDescription: false,
       errorAmount: false,
       errorDateRange: false,
       errorCategory: true,
@@ -120,7 +120,7 @@ export const validateBudgetInputs = (
   }
   return {
     errorMessage: '',
-    errorBudgetName: false,
+    errorDescription: false,
     errorAmount: false,
     errorDateRange: false,
     errorCategory: false,

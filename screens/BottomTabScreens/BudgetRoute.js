@@ -94,6 +94,7 @@ const BudgetRoute = () => {
       category
     );
     setError(validationResult);
+
     if (validationResult.errorMessage) return;
     try {
       setShowLoading(true);

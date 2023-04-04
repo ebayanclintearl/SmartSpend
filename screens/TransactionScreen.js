@@ -154,7 +154,6 @@ const TransactionScreen = ({ route }) => {
     if (validationResult.errorMessage) return;
     try {
       setShowLoading(true);
-      const docRef = doc(db, 'familyCodes', userAccount?.code.toString());
 
       const transaction = {
         uid: userAccount.uid,
@@ -171,14 +170,20 @@ const TransactionScreen = ({ route }) => {
         },
       };
 
+      const familyCodeRef = doc(
+        db,
+        'familyCodes',
+        userAccount?.code.toString()
+      );
+
       if (transactionId) {
-        await updateDoc(docRef, {
+        await updateDoc(familyCodeRef, {
           ['familyExpenseHistory.' + transactionId]: transaction,
         });
         navigation.navigate('HomeTabScreen');
       } else {
         await setDoc(
-          docRef,
+          familyCodeRef,
           {
             familyExpenseHistory: {
               [uuid.v4()]: transaction,

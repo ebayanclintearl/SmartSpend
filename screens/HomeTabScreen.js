@@ -59,26 +59,30 @@ const HomeTabScreen = () => {
   const navigation = useNavigation();
   const { userAccount, familyCode } = useContext(AppContext);
   const [value, setValue] = useState('monthly');
-  const [dateFilter, setDateFilter] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [totalBalance, setTotalBalance] = useState(0);
   const [totalIncome, setTotalIncome] = useState(0);
   const [totalExpense, setTotalExpense] = useState(0);
 
   useEffect(() => {
-    const currentDate = new Date();
+    const newCurrentDate = new Date();
     if (value === 'daily') {
-      setDateFilter(currentDate);
+      setCurrentDate(newCurrentDate);
     } else if (value === 'weekly') {
-      const weekStart = currentDate.getDate() - currentDate.getDay() + 1; // Monday of the current week
-      setDateFilter(
-        new Date(currentDate.getFullYear(), currentDate.getMonth(), weekStart)
+      const weekStart = newCurrentDate.getDate() - newCurrentDate.getDay() + 1; // Monday of the current week
+      setCurrentDate(
+        new Date(
+          newCurrentDate.getFullYear(),
+          newCurrentDate.getMonth(),
+          weekStart
+        )
       );
     } else if (value === 'monthly') {
-      setDateFilter(
-        new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+      setCurrentDate(
+        new Date(newCurrentDate.getFullYear(), newCurrentDate.getMonth(), 1)
       );
     }
-  }, [value, setDateFilter]);
+  }, [value, setCurrentDate]);
 
   const filteredByDateFamilyExpenseHistory = Object.entries(
     familyCode?.familyExpenseHistory || {}
@@ -87,23 +91,22 @@ const HomeTabScreen = () => {
       const transactionDate = transaction?.date?.toDate();
       if (value === 'daily') {
         return (
-          transactionDate.getDate() === dateFilter.getDate() &&
-          transactionDate.getMonth() === dateFilter.getMonth() &&
-          transactionDate.getFullYear() === dateFilter.getFullYear()
+          transactionDate.getDate() === currentDate.getDate() &&
+          transactionDate.getMonth() === currentDate.getMonth() &&
+          transactionDate.getFullYear() === currentDate.getFullYear()
         );
       } else if (value === 'weekly') {
-        const weekStart = dateFilter.getDate() - dateFilter.getDay() + 1; // Monday of the current week
-        const weekEnd = weekStart + 6; // Sunday of the current week
-        return (
-          transactionDate.getDate() >= weekStart &&
-          transactionDate.getDate() <= weekEnd &&
-          transactionDate.getMonth() === dateFilter.getMonth() &&
-          transactionDate.getFullYear() === dateFilter.getFullYear()
-        );
+        const monday = new Date(currentDate.getTime());
+        monday.setDate(currentDate.getDate() - currentDate.getDay() + 1);
+        const sunday = new Date(monday.getTime());
+        sunday.setDate(monday.getDate() + 6);
+        sunday.setHours(23, 59, 59, 0);
+
+        return transactionDate >= monday && transactionDate <= sunday;
       } else if (value === 'monthly') {
         return (
-          transactionDate.getMonth() === dateFilter.getMonth() &&
-          transactionDate.getFullYear() === dateFilter.getFullYear()
+          transactionDate.getMonth() === currentDate.getMonth() &&
+          transactionDate.getFullYear() === currentDate.getFullYear()
         );
       }
     })
@@ -143,22 +146,22 @@ const HomeTabScreen = () => {
 
   const handlePreviousDate = () => {
     const { days = 0, weeks = 0, months = 0, years = 0 } = offsetMap[value];
-    setDateFilter(
+    setCurrentDate(
       new Date(
-        dateFilter.getFullYear() - years,
-        dateFilter.getMonth() - months,
-        dateFilter.getDate() - days - weeks * 7
+        currentDate.getFullYear() - years,
+        currentDate.getMonth() - months,
+        currentDate.getDate() - days - weeks * 7
       )
     );
   };
 
   const handleNextDate = () => {
     const { days = 0, weeks = 0, months = 0, years = 0 } = offsetMap[value];
-    setDateFilter(
+    setCurrentDate(
       new Date(
-        dateFilter.getFullYear() + years,
-        dateFilter.getMonth() + months,
-        dateFilter.getDate() + days + weeks * 7
+        currentDate.getFullYear() + years,
+        currentDate.getMonth() + months,
+        currentDate.getDate() + days + weeks * 7
       )
     );
   };
@@ -357,10 +360,12 @@ const HomeTabScreen = () => {
                 <Text variant="bodyLarge" style={{ color: '#7F8192' }}>
                   {value === 'weekly'
                     ? formatDateRange(
-                        dateFilter,
-                        new Date(dateFilter.getTime() + 6 * 24 * 60 * 60 * 1000)
+                        currentDate,
+                        new Date(
+                          currentDate.getTime() + 6 * 24 * 60 * 60 * 1000
+                        )
                       )
-                    : formatDate(dateFilter)}
+                    : formatDate(currentDate)}
                 </Text>
                 <IconButton
                   icon="chevron-right"
@@ -448,7 +453,17 @@ const HomeTabScreen = () => {
                       </View>
                     );
                   })}
-                <View style={{ width: '100%', height: 46 }}></View>
+                <View
+                  style={{
+                    width: '100%',
+                    height: 46,
+                    justifyContent: 'center',
+                  }}
+                >
+                  {filteredByDateFamilyExpenseHistory.length === 0 && (
+                    <Text>No Data</Text>
+                  )}
+                </View>
               </Card.Content>
             </Card>
           </View>

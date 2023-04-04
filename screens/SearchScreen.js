@@ -1,4 +1,9 @@
-import { StyleSheet, View, TextInput as NativeTextInput } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  TextInput as NativeTextInput,
+  StatusBar,
+} from 'react-native';
 import React, { useContext, useState } from 'react';
 import { Appbar, Avatar, List, Text, TextInput } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
@@ -52,7 +57,12 @@ const SearchScreen = () => {
     });
   return (
     <>
-      <Appbar.Header>
+      <StatusBar
+        backgroundColor="#FFFFFF"
+        barStyle="dark-content"
+        translucent={false}
+      />
+      <Appbar.Header style={{ backgroundColor: '#FFFFFF' }}>
         <Appbar.BackAction
           style={{
             backgroundColor: '#FFFFFF',

@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StatusBar, StyleSheet, View } from 'react-native';
 import React, { useContext, useState } from 'react';
 import { AccountContext, AppContext } from '../Helper/Context';
 import { Appbar, Avatar, Button, Text } from 'react-native-paper';
@@ -10,7 +10,6 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { deleteField, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../config';
-import { StatusBar } from 'expo-status-bar';
 
 const TransactionDetailScreen = ({ route }) => {
   const navigation = useNavigation();

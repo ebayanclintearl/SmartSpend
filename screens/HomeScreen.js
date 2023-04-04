@@ -5,6 +5,7 @@ import { AccountRoute } from './BottomTabScreens/AccountRoute';
 import { HomeRoute } from './BottomTabScreens/HomeRoute';
 import BudgetRoute from './BottomTabScreens/BudgetRoute';
 import BudgetScreen from './BudgetScreen';
+import NotificationScreen from './NotificationScreen';
 
 const HomeScreen = () => {
   const theme = useTheme();
