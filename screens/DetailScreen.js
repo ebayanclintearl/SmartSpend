@@ -11,7 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import { deleteField, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../config';
 
-const TransactionDetailScreen = ({ route }) => {
+const DetailScreen = ({ route }) => {
   const navigation = useNavigation();
   const { transactionId } = route.params;
   const { userAccount, familyCode } = useContext(AppContext);
@@ -28,7 +28,7 @@ const TransactionDetailScreen = ({ route }) => {
     }
   };
   const handleEdit = async () => {
-    navigation.navigate('TransactionScreen', {
+    navigation.navigate('AddScreen', {
       transactionId: transactionId,
     });
   };
@@ -166,7 +166,7 @@ const TransactionDetailScreen = ({ route }) => {
   );
 };
 
-export default TransactionDetailScreen;
+export default DetailScreen;
 
 const styles = StyleSheet.create({
   container: {

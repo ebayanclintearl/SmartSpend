@@ -32,9 +32,9 @@ const SearchScreen = () => {
           transaction.accountType === 'member'
         );
       } else if (userAccount.type === 'member') {
-        return transaction.accountType === 'member';
+        return transaction.uid === userAccount.uid;
       } else {
-        return true;
+        return [];
       }
     })
     .filter((transaction) => {
@@ -157,7 +157,7 @@ const SearchScreen = () => {
                       </Text>
                     )}
                     onPress={() => {
-                      navigation.navigate('TransactionDetailScreen', {
+                      navigation.navigate('DetailScreen', {
                         transactionId: transaction.id,
                       });
                     }}

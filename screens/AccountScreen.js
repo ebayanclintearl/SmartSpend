@@ -1,66 +1,21 @@
-import { Image, ScrollView, StyleSheet, View, StatusBar } from 'react-native';
-import {
-  Appbar,
-  Avatar,
-  Button,
-  Card,
-  Dialog,
-  IconButton,
-  List,
-  Portal,
-  Text,
-} from 'react-native-paper';
+import { ScrollView, StyleSheet, View, StatusBar } from 'react-native';
+import { Appbar, Avatar, List, Text } from 'react-native-paper';
 import { signOut } from 'firebase/auth';
-import { auth, db } from '../../config';
-import {
-  AccountContext,
-  AppContext,
-  AuthContext,
-  LoginContext,
-} from '../../Helper/Context';
-import { useContext, useEffect, useState } from 'react';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  onSnapshot,
-  query,
-  where,
-} from 'firebase/firestore';
-import { hexToRgba } from '../../Helper/FormatFunctions';
+import { auth } from '../config';
+import { AppContext } from '../Helper/Context';
+import { useContext } from 'react';
+import { hexToRgba } from '../Helper/FormatFunctions';
 
-export const AccountRoute = () => {
-  const [accounts, setAccounts] = useState();
-  const { currentUser, setLoggedIn, userAccount, familyCode } =
-    useContext(AppContext);
-  const [visible, setVisible] = useState(false);
-  const hideDialog = () => setVisible(false);
+const AccountScreen = () => {
+  const { userAccount, accounts } = useContext(AppContext);
 
   const handleSignOut = async () => {
     try {
       await signOut(auth);
-      setLoggedIn(false);
     } catch (error) {
       console.log(error);
     }
   };
-  useEffect(() => {
-    if (!userAccount || Object.keys(userAccount).length === 0) return;
-
-    const q = query(
-      collection(db, 'users'),
-      where('code', '==', userAccount?.code)
-    );
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const accounts = snapshot?.docs?.map((doc) => doc.data());
-      setAccounts(accounts);
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
 
   return (
     <>
@@ -212,6 +167,8 @@ export const AccountRoute = () => {
     </>
   );
 };
+
+export default AccountScreen;
 
 const styles = StyleSheet.create({
   container: {

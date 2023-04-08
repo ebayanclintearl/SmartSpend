@@ -62,7 +62,7 @@ export const validateTransactionInputs = (
     errorCategory: false,
   };
 };
-export const validateBudgetInputs = (
+export const validateCategoryAllocationInputs = (
   description,
   amount,
   dateRange,
@@ -116,6 +116,41 @@ export const validateBudgetInputs = (
       errorAmount: false,
       errorDateRange: false,
       errorCategory: true,
+    };
+  }
+  return {
+    errorMessage: '',
+    errorDescription: false,
+    errorAmount: false,
+    errorDateRange: false,
+    errorCategory: false,
+  };
+};
+export const validateSuggestInputs = (amount, dateRange) => {
+  if (!amount.trim()) {
+    return {
+      errorMessage: 'Empty amount',
+      errorDescription: false,
+      errorAmount: true,
+      errorDateRange: false,
+      errorCategory: false,
+    };
+  } else if (!/^\d{1,3}(,\d{3})*(\.\d{1,2})?$/.test(amount)) {
+    return {
+      errorMessage:
+        'Amount should be a valid number without any other characters',
+      errorDescription: false,
+      errorAmount: true,
+      errorDateRange: false,
+      errorCategory: false,
+    };
+  } else if (!dateRange.trim()) {
+    return {
+      errorMessage: 'Empty Date Range',
+      errorDescription: false,
+      errorAmount: false,
+      errorDateRange: true,
+      errorCategory: false,
     };
   }
   return {

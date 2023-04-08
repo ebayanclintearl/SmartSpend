@@ -11,7 +11,7 @@ const SignUpSuccessScreen = () => {
   const { currentUser, setDisplaySignUpSuccess } = useContext(AppContext);
   const handleSuccessButton = () => {
     setDisplaySignUpSuccess(false);
-    navigation.navigate('HomeScreen');
+    navigation.navigate('HomeTabNavigatorScreen');
   };
   return (
     <SafeAreaView style={styles.container}>

@@ -2,10 +2,10 @@ import { createStackNavigator } from '@react-navigation/stack';
 import QuickStartScreen from '../screens/QuickStartScreen';
 import SignInScreen from '../screens/SignInScreen';
 import SignUpScreen from '../screens/SignUpScreen';
-import HomeScreen from '../screens/HomeScreen';
+import HomeTabNavigatorScreen from '../screens/HomeTabNavigatorScreen';
 import { AppContext } from '../Helper/Context';
-import { useContext, useEffect, useState } from 'react';
-import TransactionScreen from '../screens/TransactionScreen';
+import { useContext } from 'react';
+import AddScreen from '../screens/AddScreen';
 import RegistrationPromptScreen from '../screens/RegistrationPromptScreen';
 import CodeVerificationScreen from '../screens/CodeVerificationScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
@@ -28,13 +28,13 @@ function HomeStack() {
             />
           )}
           <Stack.Screen
-            name="HomeScreen"
-            component={HomeScreen}
+            name="HomeTabNavigatorScreen"
+            component={HomeTabNavigatorScreen}
             options={{ headerShown: false }}
           />
           <Stack.Screen
-            name="TransactionScreen"
-            component={TransactionScreen}
+            name="AddScreen"
+            component={AddScreen}
             options={{ headerShown: false }}
           />
         </Stack.Group>

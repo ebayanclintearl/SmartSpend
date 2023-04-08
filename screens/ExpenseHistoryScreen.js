@@ -55,7 +55,7 @@ const SegmentedButtons = ({ value, onValueChange, buttons }) => (
     ))}
   </View>
 );
-const HomeTabScreen = () => {
+const ExpenseHistoryScreen = () => {
   const navigation = useNavigation();
   const { userAccount, familyCode } = useContext(AppContext);
   const [value, setValue] = useState('monthly');
@@ -117,6 +117,18 @@ const HomeTabScreen = () => {
     })
     .map(([key, transaction]) => {
       return { id: key, ...transaction };
+    })
+    .filter((transaction) => {
+      if (userAccount.type === 'provider') {
+        return (
+          transaction.accountType === 'provider' ||
+          transaction.accountType === 'member'
+        );
+      } else if (userAccount.type === 'member') {
+        return transaction.uid === userAccount.uid;
+      } else {
+        return [];
+      }
     });
 
   useEffect(() => {
@@ -384,20 +396,8 @@ const HomeTabScreen = () => {
             >
               <Card.Content>
                 <Text variant="titleLarge">Expense History</Text>
-                {filteredByDateFamilyExpenseHistory
-                  .filter((transaction) => {
-                    if (userAccount.type === 'provider') {
-                      return (
-                        transaction.accountType === 'provider' ||
-                        transaction.accountType === 'member'
-                      );
-                    } else if (userAccount.type === 'member') {
-                      return transaction.uid === userAccount.uid;
-                    } else {
-                      return [];
-                    }
-                  })
-                  ?.map((transaction, index) => {
+                {filteredByDateFamilyExpenseHistory?.map(
+                  (transaction, index) => {
                     return (
                       <View
                         key={index}
@@ -445,25 +445,26 @@ const HomeTabScreen = () => {
                             </Text>
                           )}
                           onPress={() => {
-                            navigation.navigate('TransactionDetailScreen', {
+                            navigation.navigate('DetailScreen', {
                               transactionId: transaction.id,
                             });
                           }}
                         />
                       </View>
                     );
-                  })}
-                <View
-                  style={{
-                    width: '100%',
-                    height: 46,
-                    justifyContent: 'center',
-                  }}
-                >
-                  {filteredByDateFamilyExpenseHistory.length === 0 && (
+                  }
+                )}
+                {filteredByDateFamilyExpenseHistory.length === 0 && (
+                  <View
+                    style={{
+                      width: '100%',
+                      height: 46,
+                      justifyContent: 'center',
+                    }}
+                  >
                     <Text>No Data</Text>
-                  )}
-                </View>
+                  </View>
+                )}
               </Card.Content>
             </Card>
           </View>
@@ -475,7 +476,7 @@ const HomeTabScreen = () => {
           styles.fab,
           { backgroundColor: totalBalance >= 0 ? '#38B6FF' : '#FF4C38' },
         ]}
-        onPress={() => navigation.navigate('TransactionScreen')}
+        onPress={() => navigation.navigate('AddScreen')}
         color="#FFFFFF"
         customSize={64}
       />
@@ -483,7 +484,7 @@ const HomeTabScreen = () => {
   );
 };
 
-export default HomeTabScreen;
+export default ExpenseHistoryScreen;
 
 const styles = StyleSheet.create({
   container: {

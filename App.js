@@ -5,12 +5,10 @@ import {
   Provider as PaperProvider,
 } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
-import HomeStack from './routes/HomeStack';
+import MainStack from './routes/MainStack';
 import { AppContextProvider } from './Helper/Context';
-import * as Font from 'expo-font';
-import { fontConfig, fonts } from './Helper/FontConfig';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useState } from 'react';
+import { fontConfig } from './Helper/FontConfig';
+
 export default function App() {
   const theme = {
     ...DefaultTheme,
@@ -31,7 +29,7 @@ export default function App() {
     <AppContextProvider>
       <PaperProvider theme={theme}>
         <NavigationContainer>
-          <HomeStack />
+          <MainStack />
         </NavigationContainer>
       </PaperProvider>
     </AppContextProvider>

@@ -32,10 +32,17 @@ import {
   ProgressBar,
   IconButton,
 } from 'react-native-paper';
-import { handleAmountChange, hexToRgba } from '../Helper/FormatFunctions';
+import {
+  formatCurrency,
+  handleAmountChange,
+  hexToRgba,
+} from '../Helper/FormatFunctions';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { expenseCategories, incomeCategories } from '../Helper/CategoriesData';
-import { validateBudgetInputs } from '../Helper/Validation';
+import { expenseCategories } from '../Helper/CategoriesData';
+import {
+  validateCategoryAllocationInputs,
+  validateSuggestInputs,
+} from '../Helper/Validation';
 import { AppContext } from '../Helper/Context';
 import { deleteField, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../config';
@@ -94,67 +101,15 @@ const registerForPushNotificationsAsync = async () => {
     }
     // Gets the Expo Push Token
     token = (await Notifications.getExpoPushTokenAsync()).data;
-    console.log(token);
   } else {
     alert('Must use physical device for Push Notifications');
   }
 
   return token;
 };
-// Custom segment buttons in the bottom sheet
-const SegmentedButtons = ({ value, onValueChange, buttons }) => (
-  <View
-    style={{
-      flexDirection: 'row',
-      width: '100%',
-      justifyContent: 'space-between',
-      marginTop: 5,
-      marginBottom: 15,
-    }}
-  >
-    {buttons.map(({ value: buttonValue, label, disabled }) => (
-      <Button
-        key={buttonValue}
-        mode="contained"
-        contentStyle={{ padding: 3 }}
-        style={
-          value === buttonValue
-            ? {
-                backgroundColor:
-                  buttonValue === 'budgetByCagetory'
-                    ? '#38B6FF'
-                    : buttonValue === 'budgetByAccount'
-                    ? '#FF4C38'
-                    : '#F5F6FA',
-                borderRadius: 8,
-                width: '49%',
-              }
-            : {
-                backgroundColor: '#F5F6FA',
-                borderRadius: 8,
-                width: '49%',
-              }
-        }
-        labelStyle={{
-          color:
-            value === buttonValue
-              ? '#FFFFFF'
-              : disabled
-              ? '#7F8192'
-              : '#151940',
-        }}
-        onPress={() => onValueChange(buttonValue)}
-        disabled={disabled}
-      >
-        {label}
-      </Button>
-    ))}
-  </View>
-);
 
 const BudgetScreen = () => {
   const { userAccount, familyCode } = useContext(AppContext);
-  const [segmentValue, setSegmentValue] = useState('budgetByCagetory');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [dateRange, setDateRange] = useState('');
@@ -169,8 +124,6 @@ const BudgetScreen = () => {
     errorDateRange: false,
     errorCategory: false,
   });
-  const [allocationByCategoryExpanded, setAllocationByCategoryExpanded] =
-    useState(false);
   const [addAllocation, setAddAllocation] = useState(false);
   const [suggestAllocation, setSuggestAllocation] = useState(false);
   // notification
@@ -178,10 +131,15 @@ const BudgetScreen = () => {
   const [notification, setNotification] = useState(false);
   const notificationListener = useRef();
   const responseListener = useRef();
+  // Compute for budget Allocation for different date ranges
+  const budgetAllocationForDay = computeBudgetAllocation('day');
+  const budgetAllocationForWeek = computeBudgetAllocation('week');
+  const budgetAllocationForMonth = computeBudgetAllocation('month');
   // bottom sheet
   const sheetRef = useRef(null);
   const snapPoints = useMemo(() => ['90%'], []);
 
+  // notification
   useEffect(() => {
     // Register for push notifications and update expoPushToken state
     registerForPushNotificationsAsync().then((token) =>
@@ -207,15 +165,67 @@ const BudgetScreen = () => {
       Notifications.removeNotificationSubscription(responseListener.current);
     };
   }, []);
+  useEffect(() => {
+    const handleBudgetPercentageReached = async (id, percentage, category) => {
+      try {
+        const isNotificationScheduled = await AsyncStorage.getItem(id);
+        if (!isNotificationScheduled && percentage >= 1 && percentage - 1 < 1) {
+          await AsyncStorage.setItem(id, 'true'); // Set the flag before scheduling the notification
+          await schedulePushNotification(
+            'Budget Allocation Full',
+            `You have reached the maximum budget allocation for the ${category.title} category.`,
+            {},
+            5
+          );
+        } else if (isNotificationScheduled && percentage < 1) {
+          await AsyncStorage.removeItem(id); // Remove the flag if the percentage drops below 100%
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    async function notifyWhenBudgetAllocationIsFull() {
+      // Combine budgetAllocation arrays
+      const allBudgetAllocations = budgetAllocationForDay
+        .concat(budgetAllocationForWeek)
+        .concat(budgetAllocationForMonth);
+
+      // Notify when budget allocation is full for all budget allocations
+      const promises = allBudgetAllocations.map((budget) => {
+        return handleBudgetPercentageReached(
+          budget.id,
+          budget.percentage,
+          budget.category
+        );
+      });
+
+      await Promise.all(promises);
+    }
+    notifyWhenBudgetAllocationIsFull();
+  }, [
+    budgetAllocationForDay,
+    budgetAllocationForMonth,
+    budgetAllocationForWeek,
+  ]);
 
   // helper functions
-  const handleAllocationByCategoryPress = () =>
-    setAllocationByCategoryExpanded(!allocationByCategoryExpanded);
   const handleDateRangePress = () => setDateRangeExpanded(!dateRangeExpanded);
   const handleCategoryPress = () => setCategoryExpanded(!categoryExpanded);
   const handleAllocation = (isAddAllocation) => {
     setAddAllocation(isAddAllocation);
     setSuggestAllocation(!isAddAllocation);
+    setError({
+      errorMessage: '',
+      errorDescription: false,
+      errorAmount: false,
+      errorDateRange: false,
+      errorCategory: false,
+    });
+    setShowLoading(false);
+    setDescription('');
+    setAmount('');
+    setDateRange('');
+    setCategory(null);
     handleSnapPress(0);
   };
   const getDateRange = (range) => {
@@ -224,8 +234,8 @@ const BudgetScreen = () => {
     let endDate = null;
 
     if (range === 'day') {
-      startDate = new Date(now.getTime());
-      endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
     } else if (range === 'week') {
       const dayOfWeek = now.getDay();
       const daysUntilMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
@@ -257,14 +267,10 @@ const BudgetScreen = () => {
     return { startDate, endDate };
   };
   const handleSheetChange = useCallback((index) => {
-    if (index === -1) {
-      setAddAllocation(false);
-      setSuggestAllocation(false);
-      setDescription('');
-      setAmount('');
-      setDateRange('');
-      setCategory(null);
-    }
+    // if (index === -1) {
+    //   setAddAllocation(false);
+    //   setSuggestAllocation(false);
+    // }
   }, []);
   const handleSnapPress = useCallback((index) => {
     sheetRef.current?.snapToIndex(index);
@@ -273,8 +279,74 @@ const BudgetScreen = () => {
     sheetRef.current?.close();
   }, []);
 
+  // Filter transactions by date range
+  function filterFamilyExpenseHistoryByDateRange(
+    transactions,
+    timeRange,
+    budget
+  ) {
+    const startDate = budget.dateRangeStart.toDate();
+    const endDate = budget.dateRangeEnd.toDate();
+
+    return Object.entries(transactions)?.filter(([key, { date, category }]) => {
+      const transactionDate = date.toDate();
+      return (
+        transactionDate >= startDate &&
+        transactionDate <= endDate &&
+        budget.dateRange === timeRange &&
+        category.title === budget.category.title
+      );
+    });
+  }
+
+  // Compute the budget allocation for a given time range
+  function computeBudgetAllocation(timeRange) {
+    const filteredBudgets = Object.entries(
+      familyCode?.budgetAllocation?.category || {}
+    )?.filter(([_, { dateRange }]) => dateRange === timeRange);
+    const result = filteredBudgets.reduce((budgetAllocation, [key, budget]) => {
+      const {
+        name,
+        uid,
+        description,
+        amount,
+        dateRange,
+        dateRangeStart,
+        dateRangeEnd,
+        category,
+      } = budget;
+      const filteredTransactions = filterFamilyExpenseHistoryByDateRange(
+        familyCode.familyExpenseHistory,
+        timeRange,
+        budget
+      );
+      const totalAmount = filteredTransactions.reduce(
+        (total, [, { amount }]) => total + amount,
+        0
+      );
+      const percentage = Math.min(totalAmount / amount, 1);
+      budgetAllocation.push({
+        id: key,
+        name,
+        uid,
+        description,
+        amount,
+        dateRange,
+        dateRangeStart,
+        dateRangeEnd,
+        category,
+        totalAmount: totalAmount,
+        percentage: percentage,
+        budgetStartDate: budget.dateRangeStart.toDate(),
+        budgetEndDate: budget.dateRangeEnd.toDate(),
+      });
+      return budgetAllocation;
+    }, []);
+
+    return result;
+  }
   const handleSave = async () => {
-    const validationResult = validateBudgetInputs(
+    const validationResult = validateCategoryAllocationInputs(
       description,
       amount,
       dateRange,
@@ -284,90 +356,191 @@ const BudgetScreen = () => {
     if (validationResult.errorMessage) return;
 
     const { startDate, endDate } = getDateRange(dateRange.toLowerCase());
+    try {
+      setShowLoading(true);
+      const categoryAllocation = {
+        uid: userAccount.uid,
+        name: userAccount.name,
+        description: description,
+        amount: parseFloat(amount.replace(/,/g, '')),
+        dateRange: dateRange.toLowerCase(),
+        dateRangeStart: startDate,
+        dateRangeEnd: endDate,
+        category: {
+          title: category.title,
+          icon: category.icon,
+          color: category.color,
+        },
+      };
 
-    if (segmentValue === 'budgetByCagetory') {
-      try {
-        setShowLoading(true);
-        const categoryAllocation = {
-          uid: userAccount.uid,
-          name: userAccount.name,
-          description: description,
-          amount: amount,
-          dateRange: dateRange.toLowerCase(),
-          dateRangeStart: startDate,
-          dateRangeEnd: endDate,
-          category: {
-            title: category.title,
-            icon: category.icon,
-            color: category.color,
-          },
-        };
+      const familyCodeRef = doc(db, 'familyCodes', userAccount.code.toString());
 
-        const familyCodeRef = doc(
-          db,
-          'familyCodes',
-          userAccount.code.toString()
-        );
-
-        await setDoc(
-          familyCodeRef,
-          {
-            budgetAllocation: {
-              category: {
-                [uuid.v4()]: categoryAllocation,
-              },
+      await setDoc(
+        familyCodeRef,
+        {
+          budgetAllocation: {
+            category: {
+              [uuid.v4()]: categoryAllocation,
             },
           },
-          { merge: true }
-        );
-        setShowLoading(false);
-        handleCloseSheetPress();
-      } catch (error) {
-        setShowLoading(false);
-        console.log(error);
-      }
-    } else {
-      try {
-        const accountAllocation = {
-          uid: userAccount.uid,
-          name: userAccount.name,
-          accountType: userAccount.type,
-          accountDescription: description,
-          amount: amount,
-          dateRange: dateRange.toLowerCase(),
-          dateRangeStart: startDate,
-          dateRangeEnd: endDate,
-          category: {
-            title: category.title,
-            icon: category.icon,
-            color: category.color,
-          },
-        };
-
-        const familyCodeRef = doc(
-          db,
-          'familyCodes',
-          userAccount.code.toString()
-        );
-
-        await setDoc(
-          familyCodeRef,
-          {
-            budgetAllocation: {
-              account: {
-                [uuid.v4()]: accountAllocation,
-              },
-            },
-          },
-          { merge: true }
-        );
-      } catch (error) {
-        console.log(error);
-      }
+        },
+        { merge: true }
+      );
+      setShowLoading(false);
+      handleCloseSheetPress();
+    } catch (error) {
+      setShowLoading(false);
+      console.log(error);
     }
   };
 
-  const handleRemove = async (id) => {
+  const handleSuggest = async () => {
+    const getCategoryStatistics = (familyCode, budgetLimit) => {
+      // Extract transaction category expenses from familyExpenseHistory
+      const expenseHistory = familyCode.familyExpenseHistory;
+      const familyCategoryExpenses = Object.entries(expenseHistory)
+        .filter(([key, transaction]) => transaction.type === 'expense')
+        .map(([key, transaction]) => {
+          return {
+            category: transaction.category.title,
+            amount: transaction.amount,
+          };
+        });
+
+      // Step 1: Calculate total expenses for each category
+      const categoryExpenses = {};
+      familyCategoryExpenses.forEach((expense) => {
+        if (expense.category in categoryExpenses) {
+          categoryExpenses[expense.category] += expense.amount;
+        } else {
+          categoryExpenses[expense.category] = expense.amount;
+        }
+      });
+      // Step 2: Sort categories by total expenses in descending order
+      const sortedCategories = Object.keys(categoryExpenses).sort(
+        (a, b) => categoryExpenses[b] - categoryExpenses[a]
+      );
+      // Step 3-4: Assign budgets to categories
+      let remainingBudget = budgetLimit;
+      const suggestedBudgets = {};
+
+      // Determine the total variance in spending across categories
+      const totalVariance = Object.values(categoryExpenses).reduce(
+        (acc, val) => acc + (val - budgetLimit / expenseCategories.length) ** 2,
+        0
+      );
+      // Assign budgets to each category based on variance and frequency of spending
+      sortedCategories.forEach((category) => {
+        const categoryExpense = categoryExpenses[category];
+
+        // Determine the variance in spending within the category
+        const categoryVariance = familyCategoryExpenses
+          .filter((expense) => expense.category === category)
+          .reduce(
+            (acc, expense) =>
+              acc +
+              (expense.amount -
+                categoryExpense /
+                  familyCategoryExpenses.filter((e) => e.category === category)
+                    .length) **
+                2,
+            0
+          );
+
+        // Determine the weight for this category based on variance and frequency of spending
+        const weight =
+          (categoryVariance / totalVariance) *
+          Math.log(
+            familyCategoryExpenses.filter(
+              (expense) => expense.category === category
+            ).length + 1
+          );
+
+        // Determine the budget for this category based on the weight and remaining budget
+        const budget = remainingBudget * weight;
+
+        // Update remaining budget and suggested budgets
+        remainingBudget -= budget;
+        suggestedBudgets[category] = budget;
+      });
+
+      // Allocate remaining budget evenly across categories if necessary
+      if (remainingBudget > 0) {
+        const numCategories = Object.keys(suggestedBudgets).length;
+        const remainingBudgetPerCategory = remainingBudget / numCategories;
+        Object.keys(suggestedBudgets).forEach((category) => {
+          suggestedBudgets[category] += remainingBudgetPerCategory;
+        });
+      }
+
+      const result = Object.keys(suggestedBudgets).map((title) => ({
+        title,
+        distributedValue: Math.round(suggestedBudgets[title]),
+        icon: expenseCategories.find((category) => category.title === title)
+          .icon,
+        color: expenseCategories.find((category) => category.title === title)
+          .color,
+      }));
+
+      return result;
+    };
+
+    const createCategoryAllocation = (familyCode, budget) => {
+      const categoryStats = getCategoryStatistics(familyCode, budget);
+      const { startDate, endDate } = getDateRange(dateRange.toLowerCase());
+      return categoryStats.reduce((acc, category) => {
+        const { title, distributedValue, icon, color } = category;
+        const categoryAllocationId = uuid.v4();
+
+        acc[categoryAllocationId] = {
+          uid: userAccount.uid,
+          name: userAccount.name,
+          description: `${title} Budget`,
+          amount: distributedValue,
+          dateRange: dateRange.toLowerCase(),
+          dateRangeStart: startDate,
+          dateRangeEnd: endDate,
+          category: {
+            title,
+            icon,
+            color,
+          },
+        };
+
+        return acc;
+      }, {});
+    };
+
+    try {
+      const validationResult = validateSuggestInputs(amount, dateRange);
+      setError(validationResult);
+      console.log(error.errorMessage);
+      if (validationResult.errorMessage) return;
+
+      setShowLoading(true);
+      const categoryAllocationList = createCategoryAllocation(
+        familyCode,
+        parseFloat(amount.replace(/,/g, ''))
+      );
+      const familyCodeRef = doc(db, 'familyCodes', userAccount.code.toString());
+      await setDoc(
+        familyCodeRef,
+        {
+          budgetAllocation: {
+            category: categoryAllocationList,
+          },
+        },
+        { merge: true }
+      );
+      setShowLoading(false);
+      handleCloseSheetPress();
+    } catch (error) {
+      setShowLoading(false);
+      console.log(error);
+    }
+  };
+
+  const handleDeleteAllocation = async (id) => {
     try {
       const familyCodeRef = doc(
         db,
@@ -449,6 +622,13 @@ const BudgetScreen = () => {
               fontWeight: 'bold',
             }}
           >
+            Budget: {formatCurrency(budget.amount)}
+          </Text>
+          <Text
+            style={{
+              fontWeight: 'bold',
+            }}
+          >
             Desc: {budget.description}
           </Text>
           <ProgressBar
@@ -485,7 +665,7 @@ const BudgetScreen = () => {
           size={24}
           iconColor="#FFFFFF"
           onPress={() => {
-            handleRemove(budget.id);
+            handleDeleteAllocation(budget.id);
           }}
           style={{
             backgroundColor: budget.category.color,
@@ -506,94 +686,6 @@ const BudgetScreen = () => {
       }}
     />
   );
-
-  // Filter transactions by date range
-  function filterFamilyExpenseHistoryByDateRange(
-    transactions,
-    timeRange,
-    budget
-  ) {
-    const startDate = budget.dateRangeStart.toDate();
-    const endDate = budget.dateRangeEnd.toDate();
-
-    return Object.entries(transactions)?.filter(([key, { date, category }]) => {
-      const transactionDate = date.toDate();
-      return (
-        transactionDate >= startDate &&
-        transactionDate <= endDate &&
-        budget.dateRange === timeRange &&
-        category.title === budget.category.title
-      );
-    });
-  }
-  // Compute the budget allocation for a given time range
-  function computeBudgetSummary(timeRange) {
-    const filteredBudgets = Object.entries(
-      familyCode.budgetAllocation.category || {}
-    )?.filter(([_, { dateRange }]) => dateRange === timeRange);
-
-    return filteredBudgets.reduce((budgetSummary, [key, budget]) => {
-      const {
-        name,
-        uid,
-        description,
-        amount,
-        dateRange,
-        dateRangeStart,
-        dateRangeEnd,
-        category,
-      } = budget;
-      const filteredTransactions = filterFamilyExpenseHistoryByDateRange(
-        familyCode.familyExpenseHistory,
-        timeRange,
-        budget
-      );
-      const totalAmount = filteredTransactions.reduce(
-        (total, [, { amount }]) => total + amount,
-        0
-      );
-      const percentage = Math.min(totalAmount / amount, 1);
-      budgetSummary.push({
-        id: key,
-        name,
-        uid,
-        description,
-        amount,
-        dateRange,
-        dateRangeStart,
-        dateRangeEnd,
-        category,
-        totalAmount: totalAmount,
-        percentage: percentage,
-        budgetStartDate: budget.dateRangeStart.toDate(),
-        budgetEndDate: budget.dateRangeEnd.toDate(),
-      });
-      async function handleBudgetPercentageReached(id, percentage) {
-        try {
-          if (percentage >= 1) {
-            const isNotificationScheduled = await AsyncStorage.getItem(id);
-            if (!isNotificationScheduled) {
-              await schedulePushNotification(
-                'Budget Allocation Full',
-                `You have reached the maximum budget allocation for the ${category.title} category. 
-                Please review your spending habits and consider adjusting your budget accordingly.`,
-                {}, // additional parameter for data/sender/message
-                5 // send notification after 5 seconds
-              );
-              await AsyncStorage.setItem(id, 'true');
-            }
-          }
-        } catch (error) {
-          console.error(error);
-        }
-      }
-      handleBudgetPercentageReached(key, percentage);
-
-      return budgetSummary;
-    }, []);
-  }
-
-  const budgetAllocationForDay = computeBudgetSummary('day');
 
   return (
     <>
@@ -628,17 +720,59 @@ const BudgetScreen = () => {
         />
       </Appbar.Header>
       <View style={styles.container}>
-        <View style={{ paddingHorizontal: '3%' }}>
-          <ScrollView>
-            <List.Section title="Budget by Category">
-              <List.Accordion
-                title="Day"
-                expanded={allocationByCategoryExpanded}
-                onPress={handleAllocationByCategoryPress}
+        <View
+          style={{
+            paddingHorizontal: '3%',
+            flexGrow: 1,
+          }}
+        >
+          {budgetAllocationForDay.length <= 0 &&
+            budgetAllocationForWeek.length <= 0 &&
+            budgetAllocationForMonth.length <= 0 && (
+              <View
+                style={{
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                }}
               >
-                {budgetAllocationForDay?.map(renderCategoryAllocation)}
-              </List.Accordion>
-            </List.Section>
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    fontSize: 16,
+                    color: '#7F8192',
+                  }}
+                >
+                  Get valuable insights into your spending habits by tracking
+                  your expenses across different categories over a specified
+                  period of time such as monthly, weekly, and daily budgets. You
+                  will be notified when you approach your budget limit for each
+                  category, helping you stay on track with your financial goals.
+                </Text>
+              </View>
+            )}
+          <ScrollView>
+            {budgetAllocationForDay.length > 0 ||
+            budgetAllocationForWeek.length > 0 ||
+            budgetAllocationForMonth.length > 0 ? (
+              <List.Section title="Budget by Category">
+                {budgetAllocationForDay.length > 0 && (
+                  <List.Accordion title="Day">
+                    {budgetAllocationForDay?.map(renderCategoryAllocation)}
+                  </List.Accordion>
+                )}
+                {budgetAllocationForWeek.length > 0 && (
+                  <List.Accordion title="Week">
+                    {budgetAllocationForWeek?.map(renderCategoryAllocation)}
+                  </List.Accordion>
+                )}
+                {budgetAllocationForMonth.length > 0 && (
+                  <List.Accordion title="Month">
+                    {budgetAllocationForMonth?.map(renderCategoryAllocation)}
+                  </List.Accordion>
+                )}
+              </List.Section>
+            ) : null}
           </ScrollView>
         </View>
         <BottomSheet
@@ -657,31 +791,14 @@ const BudgetScreen = () => {
           >
             {addAllocation && (
               <View>
-                <SegmentedButtons
-                  value={segmentValue}
-                  onValueChange={setSegmentValue}
-                  buttons={[
-                    {
-                      value: 'budgetByCagetory',
-                      label: 'Category',
-                      disabled: false,
-                    },
-                    {
-                      value: 'budgetByAccount',
-                      label: 'Account',
-                      disabled: false,
-                    },
-                  ]}
-                />
+                <Text variant="titleLarge" style={{ textAlign: 'center' }}>
+                  Category Allocation
+                </Text>
 
                 {/* description */}
                 <TextInput
                   mode="outlined"
-                  label={
-                    segmentValue === 'budgetByCagetory'
-                      ? 'Budget Description'
-                      : 'Account Description'
-                  }
+                  label="Budget Description"
                   outlineColor="#F5F6FA"
                   outlineStyle={{ borderRadius: 5 }}
                   activeOutlineColor="#151940"
@@ -746,6 +863,7 @@ const BudgetScreen = () => {
                     {error.errorMessage}
                   </HelperText>
                 )}
+
                 {/* date range */}
                 <View>
                   <TouchableWithoutFeedback
@@ -882,9 +1000,7 @@ const BudgetScreen = () => {
                   mode="contained"
                   compact={true}
                   loading={showLoading}
-                  buttonColor={
-                    segmentValue === 'budgetByCagetory' ? '#38B6FF' : '#FF4C38'
-                  }
+                  buttonColor="#38B6FF"
                   onPress={() => handleSave()}
                   contentStyle={{ padding: 3 }}
                   style={{
@@ -897,6 +1013,7 @@ const BudgetScreen = () => {
                 </Button>
               </View>
             )}
+
             {suggestAllocation && (
               <View>
                 {/* Display backpack img */}
@@ -914,7 +1031,7 @@ const BudgetScreen = () => {
                       width: '100%',
                       height: '100%',
                     }}
-                    source={require('../assets/AppAssets/backpack.png')}
+                    source={require('../assets/AppAssets/allocation_algo_icon.png')}
                   />
                 </View>
                 <Text
@@ -925,20 +1042,125 @@ const BudgetScreen = () => {
                     alignSelf: 'center',
                   }}
                 >
-                  Backpack Algorithm
+                  Budget Allocation Algorithm
                 </Text>
                 <Text style={{ textAlign: 'center' }}>
-                  The backpack algorithm, also known as the knapsack algorithm,
-                  is commonly used to solve optimization problems where a set of
-                  items have to be selected to maximize their total value
-                  without exceeding a given value.
+                  Description: The algorithm automatically allocates a user's
+                  budget to different expense categories based on their past
+                  spending habits. It calculates the total expenses for each
+                  category, sorts them by total expenses in descending order,
+                  assigns budgets to each category based on variance and
+                  frequency of spending, and allocates any remaining budget
+                  evenly across categories if necessary. The output is a list of
+                  suggested budgets for each expense category.
                 </Text>
+
+                {/* budget */}
+                <TextInput
+                  mode="outlined"
+                  label="Budget"
+                  outlineColor="#F5F6FA"
+                  outlineStyle={{ borderRadius: 5 }}
+                  activeOutlineColor="#151940"
+                  value={amount}
+                  error={error.errorAmount}
+                  style={{
+                    marginVertical: 5,
+                    backgroundColor: '#F5F6FA',
+                    width: '100%',
+                  }}
+                  onChangeText={(value) => handleAmountChange(value, setAmount)}
+                  render={(props) => (
+                    <NativeTextInput {...props} keyboardType={'numeric'} />
+                  )}
+                  right={
+                    <TextInput.Icon
+                      icon={({ size }) => (
+                        <Icon name="currency-php" size={size} color="#7F8192" />
+                      )}
+                      disabled={true}
+                      forceTextInputFocus={false}
+                    />
+                  }
+                />
+                {error.errorAmount && (
+                  <HelperText type="error" visible={error.errorAmount}>
+                    {error.errorMessage}
+                  </HelperText>
+                )}
+
+                {/* date range */}
+                <View>
+                  <TouchableWithoutFeedback
+                    onPress={() => handleDateRangePress()}
+                  >
+                    <View style={{ width: '100%' }}>
+                      <TextInput
+                        mode="outlined"
+                        outlineColor="#F5F6FA"
+                        outlineStyle={{ borderRadius: 5 }}
+                        value={dateRange ? dateRange : 'Select DateRange'}
+                        error={error.errorDateRange}
+                        style={{
+                          marginVertical: 5,
+                          backgroundColor: '#F5F6FA',
+                        }}
+                        editable={false}
+                        right={
+                          <TextInput.Icon
+                            icon={({ size }) => (
+                              <Icon
+                                name="chevron-down"
+                                size={size + 10}
+                                color="#7F8192"
+                              />
+                            )}
+                            disabled={true}
+                            forceTextInputFocus={false}
+                          />
+                        }
+                      />
+                    </View>
+                  </TouchableWithoutFeedback>
+                  {error.errorDateRange && (
+                    <HelperText type="error" visible={error.errorDateRange}>
+                      {error.errorMessage}
+                    </HelperText>
+                  )}
+                  <Surface
+                    style={[
+                      styles.surface,
+                      {
+                        height: 180,
+                        display: dateRangeExpanded ? 'flex' : 'none',
+                      },
+                    ]}
+                    elevation={2}
+                  >
+                    <View
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                      }}
+                    >
+                      <BottomSheetScrollView
+                        contentContainerStyle={{
+                          backgroundColor: '#FFFFFF',
+                          flexGrow: 1,
+                        }}
+                      >
+                        {['Day', 'Week', 'Month'].map(renderDateRanges)}
+                      </BottomSheetScrollView>
+                    </View>
+                  </Surface>
+                </View>
+
                 <Button
                   mode="contained"
                   compact={true}
                   loading={showLoading}
                   buttonColor="#38B6FF"
-                  onPress={() => handleSave()}
+                  onPress={() => handleSuggest()}
                   contentStyle={{ padding: 3 }}
                   style={{
                     borderRadius: 5,

@@ -1,10 +1,11 @@
 import { Image, SafeAreaView, StatusBar, StyleSheet } from 'react-native';
-import React from 'react';
+import React, { useContext } from 'react';
 
 import Onboarding from 'react-native-onboarding-swiper';
 import { Button, IconButton } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AppContext } from '../Helper/Context';
 
 const Next = ({ isLight, ...props }) => (
   <IconButton
@@ -27,10 +28,12 @@ const Done = ({ isLight, ...props }) => (
 
 const OnboardingScreen = () => {
   const navigation = useNavigation();
+  const { setOnboardingComplete } = useContext(AppContext);
   async function completeOnboarding() {
     try {
-      navigation.navigate('SignInScreen');
       await AsyncStorage.setItem('onboardingComplete', 'true');
+      setOnboardingComplete(true);
+      navigation.navigate('SignInScreen');
     } catch (error) {
       console.log(error);
     }

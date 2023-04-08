@@ -91,7 +91,7 @@ const SegmentedButtons = ({ value, onValueChange, buttons }) => (
     ))}
   </View>
 );
-const TransactionScreen = ({ route }) => {
+const AddScreen = ({ route }) => {
   const navigation = useNavigation();
   const { transactionId } = route.params ?? {};
   const [date, setDate] = useState(new Date());
@@ -180,7 +180,7 @@ const TransactionScreen = ({ route }) => {
         await updateDoc(familyCodeRef, {
           ['familyExpenseHistory.' + transactionId]: transaction,
         });
-        navigation.navigate('HomeTabScreen');
+        navigation.navigate('ExpenseHistoryScreen');
       } else {
         await setDoc(
           familyCodeRef,
@@ -466,7 +466,7 @@ const TransactionScreen = ({ route }) => {
   );
 };
 
-export default TransactionScreen;
+export default AddScreen;
 
 const styles = StyleSheet.create({
   container: {
