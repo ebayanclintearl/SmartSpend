@@ -44,7 +44,16 @@ import {
   validateSuggestInputs,
 } from '../Helper/Validation';
 import { AppContext } from '../Helper/Context';
-import { deleteField, doc, setDoc, updateDoc } from 'firebase/firestore';
+import {
+  collection,
+  deleteField,
+  doc,
+  onSnapshot,
+  query,
+  setDoc,
+  updateDoc,
+  where,
+} from 'firebase/firestore';
 import { db } from '../config';
 import uuid from 'react-native-uuid';
 import * as Device from 'expo-device';
@@ -59,18 +68,6 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
-
-// Schedules a push notification to be sent after 2 seconds
-const schedulePushNotification = async (title, body, data, seconds) => {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: title,
-      body: body,
-      data: data,
-    },
-    trigger: { seconds: seconds },
-  });
-};
 
 // Registers the device for push notifications and returns the Expo Push Token
 const registerForPushNotificationsAsync = async () => {
@@ -165,48 +162,83 @@ const BudgetScreen = () => {
       Notifications.removeNotificationSubscription(responseListener.current);
     };
   }, []);
-  useEffect(() => {
-    const handleBudgetPercentageReached = async (id, percentage, category) => {
-      try {
-        const isNotificationScheduled = await AsyncStorage.getItem(id);
-        if (!isNotificationScheduled && percentage >= 1 && percentage - 1 < 1) {
-          await AsyncStorage.setItem(id, 'true'); // Set the flag before scheduling the notification
-          await schedulePushNotification(
-            'Budget Allocation Full',
-            `You have reached the maximum budget allocation for the ${category.title} category.`,
-            {},
-            5
-          );
-        } else if (isNotificationScheduled && percentage < 1) {
-          await AsyncStorage.removeItem(id); // Remove the flag if the percentage drops below 100%
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    async function notifyWhenBudgetAllocationIsFull() {
-      // Combine budgetAllocation arrays
-      const allBudgetAllocations = budgetAllocationForDay
-        .concat(budgetAllocationForWeek)
-        .concat(budgetAllocationForMonth);
 
-      // Notify when budget allocation is full for all budget allocations
-      const promises = allBudgetAllocations.map((budget) => {
-        return handleBudgetPercentageReached(
-          budget.id,
-          budget.percentage,
-          budget.category
-        );
+  const removeNotifiedBudgetId = async (idToRemove) => {
+    const notifiedBudgetIds = await AsyncStorage.getItem('notifiedBudgetIds');
+    const notifiedBudgetIdsArray = notifiedBudgetIds
+      ? JSON.parse(notifiedBudgetIds)
+      : [];
+
+    const updatedNotifiedBudgetIds = JSON.stringify(
+      notifiedBudgetIdsArray.filter((id) => id !== idToRemove)
+    );
+    await AsyncStorage.setItem('notifiedBudgetIds', updatedNotifiedBudgetIds);
+  };
+  const sendBudgetNotifications = async (
+    budgetAllocationForDay,
+    budgetAllocationForWeek,
+    budgetAllocationForMonth
+  ) => {
+    const budgets = [
+      ...budgetAllocationForDay,
+      ...budgetAllocationForWeek,
+      ...budgetAllocationForMonth,
+    ];
+
+    const percentageReached = budgets
+      .filter((budget) => budget.percentage >= 1)
+      .map((budget) => {
+        return { id: budget.id, description: budget.description };
       });
 
-      await Promise.all(promises);
-    }
-    notifyWhenBudgetAllocationIsFull();
-  }, [
+    // Retrieve list of IDs that have already triggered a notification
+    const notifiedBudgetIds = await AsyncStorage.getItem('notifiedBudgetIds');
+    const notifiedBudgetIdsArray = notifiedBudgetIds
+      ? JSON.parse(notifiedBudgetIds)
+      : [];
+
+    // Filter out previously notified budget IDs
+    const percentageToNotify = percentageReached.filter(
+      (budget) => !notifiedBudgetIdsArray.includes(budget.id)
+    );
+
+    // Filter and remove every dropped percentage from notified budget IDs
+    const percentageDrop = budgets
+      .filter(
+        (budget) =>
+          budget.percentage < 1 && notifiedBudgetIdsArray.includes(budget.id)
+      )
+      .forEach((budget) => {
+        removeNotifiedBudgetId(budget.id);
+      });
+
+    // Loop through percentageToNotify and send notifications for new IDs
+    const newNotifiedBudgetIds = [];
+    percentageToNotify.forEach((budget) => {
+      console.log('notify', budget.description);
+      Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'Budget notification',
+          body: `You have reached your budget for ${budget.description}.`,
+        },
+        to: expoPushToken,
+        trigger: { seconds: 5 },
+      });
+      newNotifiedBudgetIds.push(budget.id);
+    });
+
+    // Store updated list of notified budget IDs
+    const updatedNotifiedBudgetIds = JSON.stringify([
+      ...notifiedBudgetIdsArray,
+      ...newNotifiedBudgetIds,
+    ]);
+    await AsyncStorage.setItem('notifiedBudgetIds', updatedNotifiedBudgetIds);
+  };
+  sendBudgetNotifications(
     budgetAllocationForDay,
-    budgetAllocationForMonth,
     budgetAllocationForWeek,
-  ]);
+    budgetAllocationForMonth
+  );
 
   // helper functions
   const handleDateRangePress = () => setDateRangeExpanded(!dateRangeExpanded);
@@ -302,11 +334,10 @@ const BudgetScreen = () => {
   // Compute the budget allocation for a given time range
   function computeBudgetAllocation(timeRange) {
     const filteredBudgets = Object.entries(
-      familyCode?.budgetAllocation?.category || {}
+      familyCode?.budgetAllocation || {}
     )?.filter(([_, { dateRange }]) => dateRange === timeRange);
     const result = filteredBudgets.reduce((budgetAllocation, [key, budget]) => {
       const {
-        name,
         uid,
         description,
         amount,
@@ -327,7 +358,6 @@ const BudgetScreen = () => {
       const percentage = Math.min(totalAmount / amount, 1);
       budgetAllocation.push({
         id: key,
-        name,
         uid,
         description,
         amount,
@@ -360,7 +390,6 @@ const BudgetScreen = () => {
       setShowLoading(true);
       const categoryAllocation = {
         uid: userAccount.uid,
-        name: userAccount.name,
         description: description,
         amount: parseFloat(amount.replace(/,/g, '')),
         dateRange: dateRange.toLowerCase(),
@@ -379,9 +408,7 @@ const BudgetScreen = () => {
         familyCodeRef,
         {
           budgetAllocation: {
-            category: {
-              [uuid.v4()]: categoryAllocation,
-            },
+            [uuid.v4()]: categoryAllocation,
           },
         },
         { merge: true }
@@ -395,6 +422,7 @@ const BudgetScreen = () => {
   };
 
   const handleSuggest = async () => {
+    // Budget Allocation Algorithm
     const getCategoryStatistics = (familyCode, budgetLimit) => {
       // Extract transaction category expenses from familyExpenseHistory
       const expenseHistory = familyCode.familyExpenseHistory;
@@ -472,7 +500,7 @@ const BudgetScreen = () => {
           suggestedBudgets[category] += remainingBudgetPerCategory;
         });
       }
-
+      // Format the result
       const result = Object.keys(suggestedBudgets).map((title) => ({
         title,
         distributedValue: Math.round(suggestedBudgets[title]),
@@ -494,7 +522,6 @@ const BudgetScreen = () => {
 
         acc[categoryAllocationId] = {
           uid: userAccount.uid,
-          name: userAccount.name,
           description: `${title} Budget`,
           amount: distributedValue,
           dateRange: dateRange.toLowerCase(),
@@ -526,9 +553,7 @@ const BudgetScreen = () => {
       await setDoc(
         familyCodeRef,
         {
-          budgetAllocation: {
-            category: categoryAllocationList,
-          },
+          budgetAllocation: categoryAllocationList,
         },
         { merge: true }
       );
@@ -548,13 +573,10 @@ const BudgetScreen = () => {
         userAccount?.code.toString()
       );
       await updateDoc(familyCodeRef, {
-        ['budgetAllocation.category.' + id]: deleteField(),
+        ['budgetAllocation.' + id]: deleteField(),
       });
-      // remove the saved id from notification
-      const itemExists = await AsyncStorage.getItem(id);
-      if (itemExists !== null) {
-        await AsyncStorage.removeItem(id);
-      }
+
+      removeNotifiedBudgetId(id);
     } catch (error) {
       console.log(error);
     }
@@ -607,30 +629,11 @@ const BudgetScreen = () => {
         borderRadius: 10,
         marginVertical: 2,
       }}
-      title={budget.name}
+      title={budget.description}
       description={() => (
         <View style={{ width: '100%' }}>
-          <Text
-            style={{
-              fontWeight: 'bold',
-            }}
-          >
-            PHP {budget.totalAmount}
-          </Text>
-          <Text
-            style={{
-              fontWeight: 'bold',
-            }}
-          >
-            Budget: {formatCurrency(budget.amount)}
-          </Text>
-          <Text
-            style={{
-              fontWeight: 'bold',
-            }}
-          >
-            Desc: {budget.description}
-          </Text>
+          <Text>budget: {formatCurrency(budget.amount)}</Text>
+          <Text>expense: {formatCurrency(budget.totalAmount)}</Text>
           <ProgressBar
             progress={budget.percentage}
             color={budget.category.color}
@@ -874,7 +877,7 @@ const BudgetScreen = () => {
                         mode="outlined"
                         outlineColor="#F5F6FA"
                         outlineStyle={{ borderRadius: 5 }}
-                        value={dateRange ? dateRange : 'Select DateRange'}
+                        value={dateRange ? dateRange : 'select Date Range'}
                         error={error.errorDateRange}
                         style={{
                           marginVertical: 5,
@@ -1099,7 +1102,7 @@ const BudgetScreen = () => {
                         mode="outlined"
                         outlineColor="#F5F6FA"
                         outlineStyle={{ borderRadius: 5 }}
-                        value={dateRange ? dateRange : 'Select DateRange'}
+                        value={dateRange ? dateRange : 'select Date Range'}
                         error={error.errorDateRange}
                         style={{
                           marginVertical: 5,
