@@ -96,70 +96,71 @@ const AccountScreen = () => {
                 Family Code
               </Text>
             </View>
-            <Text variant="titleLarge" style={{ padding: 10 }}>
-              Linked Account(s)
-            </Text>
             {accounts &&
               accounts
                 ?.filter((account) => account.type !== userAccount.type)
                 .map((account) => (
-                  <List.Item
-                    key={account.uid}
-                    title={account.name}
-                    description={account.email}
-                    descriptionNumberOfLines={1}
-                    descriptionEllipsizeMode="tail"
-                    style={{
-                      backgroundColor: hexToRgba(
-                        account.profileBackground,
-                        0.1
-                      ),
-                      borderRadius: 12,
-                      margin: 5,
-                    }}
-                    left={(props) => (
-                      <List.Icon
-                        {...props}
-                        icon={() => (
-                          <Avatar.Icon
-                            size={45}
-                            icon="account"
-                            color="#FFFFFF"
-                            style={{
-                              backgroundColor: account.profileBackground,
-                            }}
-                          />
-                        )}
-                      />
-                    )}
-                    right={(props) => (
-                      <View
-                        style={{
-                          backgroundColor: '#FFFFFF',
-                          width: 50,
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          borderRadius: 12,
-                        }}
-                      >
-                        {account.type === 'provider' ? (
-                          <Text
-                            variant="labelLarge"
-                            style={{ color: '#FF4C38' }}
-                          >
-                            P
-                          </Text>
-                        ) : (
-                          <Text
-                            variant="labelLarge"
-                            style={{ color: '#38B6FF' }}
-                          >
-                            M
-                          </Text>
-                        )}
-                      </View>
-                    )}
-                  />
+                  <View key={account.uid}>
+                    <Text variant="titleLarge" style={{ padding: 10 }}>
+                      Linked Account(s)
+                    </Text>
+                    <List.Item
+                      title={account.name}
+                      description={account.email}
+                      descriptionNumberOfLines={1}
+                      descriptionEllipsizeMode="tail"
+                      style={{
+                        backgroundColor: hexToRgba(
+                          account.profileBackground,
+                          0.1
+                        ),
+                        borderRadius: 12,
+                        margin: 5,
+                      }}
+                      left={(props) => (
+                        <List.Icon
+                          {...props}
+                          icon={() => (
+                            <Avatar.Icon
+                              size={45}
+                              icon="account"
+                              color="#FFFFFF"
+                              style={{
+                                backgroundColor: account.profileBackground,
+                              }}
+                            />
+                          )}
+                        />
+                      )}
+                      right={(props) => (
+                        <View
+                          style={{
+                            backgroundColor: '#FFFFFF',
+                            width: 50,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            borderRadius: 12,
+                          }}
+                        >
+                          {account.type === 'provider' ? (
+                            <Text
+                              variant="labelLarge"
+                              style={{ color: '#FF4C38' }}
+                            >
+                              P
+                            </Text>
+                          ) : (
+                            <Text
+                              variant="labelLarge"
+                              style={{ color: '#38B6FF' }}
+                            >
+                              M
+                            </Text>
+                          )}
+                        </View>
+                      )}
+                    />
+                  </View>
                 ))}
           </View>
         </ScrollView>

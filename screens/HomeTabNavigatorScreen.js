@@ -65,9 +65,8 @@ const HomeTabNavigatorScreen = () => {
         barStyle={{ backgroundColor: '#FFFFFF' }}
         renderLabel={(props) => (
           <Text
-            variant="bodySmall"
+            variant="labelMedium"
             style={{
-              fontWeight: '600',
               textAlign: 'center',
               color: props.focused ? '#1C1B1E' : '#7F8192',
             }}

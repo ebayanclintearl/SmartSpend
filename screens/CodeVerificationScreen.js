@@ -47,8 +47,8 @@ const CodeVerificationScreen = () => {
       <SafeAreaView style={styles.container}>
         <StatusBar
           backgroundColor="#FF4C38"
-          barStyle="dark-content"
-          translucent={false}
+          barStyle="light-content"
+          translucent
         />
         <KeyboardAwareScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <Appbar.Header style={{ backgroundColor: '#FFFFFF' }}>

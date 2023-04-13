@@ -13,7 +13,7 @@ import NetInfo from '@react-native-community/netinfo';
 import { fonts } from './FontConfig';
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
-import { View } from 'react-native';
+import { StatusBar, View } from 'react-native';
 import { ActivityIndicator, Text } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -143,6 +143,7 @@ export const AppContextProvider = ({ children }) => {
             setIsLoading(false);
             setLoggedIn(true);
           } else {
+            setErrorFetchingUserData(true);
             console.log('no internet connection');
           }
         } else {
@@ -170,12 +171,22 @@ export const AppContextProvider = ({ children }) => {
   } else if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <StatusBar
+          backgroundColor="#FFFFFF"
+          barStyle="dark-content"
+          translucent={false}
+        />
         <ActivityIndicator animating={true} color="black" />
       </View>
     );
   } else if (errorFetchingUserData) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <StatusBar
+          backgroundColor="#FFFFFF"
+          barStyle="dark-content"
+          translucent={false}
+        />
         <Text>Network Error: Restart The App</Text>
       </View>
     );
