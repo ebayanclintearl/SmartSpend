@@ -64,6 +64,7 @@ const ExpenseHistoryScreen = () => {
   const [totalIncome, setTotalIncome] = useState(0);
   const [totalExpense, setTotalExpense] = useState(0);
 
+  // This code block sets the current date based on the selected value of a frequency filter (daily, weekly, monthly)
   useEffect(() => {
     const newCurrentDate = new Date();
     if (value === 'daily') {
@@ -84,6 +85,10 @@ const ExpenseHistoryScreen = () => {
     }
   }, [value, setCurrentDate]);
 
+  // This code filters the family expenses by the selected time period (daily, weekly, or monthly)
+  // and then sorts the transactions in reverse chronological order. It also maps the transaction objects to include their corresponding IDs.
+  // Finally, it filters the transactions based on the user account type (provider or member).
+  // The resulting array contains the filtered and sorted family expenses ready to be displayed in the app.
   const filteredByDateFamilyExpenseHistory = Object.entries(
     familyCode?.familyExpenseHistory || {}
   )
@@ -131,6 +136,8 @@ const ExpenseHistoryScreen = () => {
       }
     });
 
+  // This code block calculates the total income, total expense, and total balance based on the filtered family expense history.
+  // It runs whenever the filteredByDateFamilyExpenseHistory state changes.
   useEffect(() => {
     const calculateTotals = () => {
       const income = filteredByDateFamilyExpenseHistory
@@ -155,7 +162,6 @@ const ExpenseHistoryScreen = () => {
     weekly: { weeks: 1 },
     monthly: { months: 1 },
   };
-
   const handlePreviousDate = () => {
     const { days = 0, weeks = 0, months = 0, years = 0 } = offsetMap[value];
     setCurrentDate(
@@ -166,7 +172,6 @@ const ExpenseHistoryScreen = () => {
       )
     );
   };
-
   const handleNextDate = () => {
     const { days = 0, weeks = 0, months = 0, years = 0 } = offsetMap[value];
     setCurrentDate(

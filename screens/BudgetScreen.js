@@ -311,7 +311,6 @@ const BudgetScreen = () => {
     sheetRef.current?.close();
   }, []);
 
-  // Filter transactions by date range
   function filterFamilyExpenseHistoryByDateRange(
     transactions,
     timeRange,
@@ -330,8 +329,6 @@ const BudgetScreen = () => {
       );
     });
   }
-
-  // Compute the budget allocation for a given time range
   function computeBudgetAllocation(timeRange) {
     const filteredBudgets = Object.entries(
       familyCode?.budgetAllocation || {}
@@ -420,7 +417,6 @@ const BudgetScreen = () => {
       console.log(error);
     }
   };
-
   const handleSuggest = async () => {
     // Budget Allocation Algorithm
     const getCategoryStatistics = (familyCode, budgetLimit) => {
@@ -564,7 +560,6 @@ const BudgetScreen = () => {
       console.log(error);
     }
   };
-
   const handleDeleteAllocation = async (id) => {
     try {
       const familyCodeRef = doc(
@@ -594,7 +589,6 @@ const BudgetScreen = () => {
     ),
     []
   );
-
   const renderCategoryItems = (item) => (
     <List.Item
       key={item.id}
@@ -620,7 +614,6 @@ const BudgetScreen = () => {
       }}
     />
   );
-
   const renderCategoryAllocation = (budget) => (
     <List.Item
       key={budget.id}
@@ -678,7 +671,6 @@ const BudgetScreen = () => {
       )}
     />
   );
-
   const renderDateRanges = (range, index) => (
     <List.Item
       key={index}

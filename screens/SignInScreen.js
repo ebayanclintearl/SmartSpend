@@ -1,37 +1,25 @@
 import { Image, StatusBar, StyleSheet, View } from 'react-native';
-import React, { useContext, useState } from 'react';
-import {
-  Button,
-  Text,
-  TextInput,
-  HelperText,
-  Snackbar,
-} from 'react-native-paper';
+import React, { useState } from 'react';
+import { Button, Text, TextInput, HelperText } from 'react-native-paper';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config';
-import { AppContext } from '../Helper/Context';
 import { validateSignInInputs } from '../Helper/Validation';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useNavigation } from '@react-navigation/native';
 const SignInScreen = () => {
-  // Initialize state variables
-  const navigation = useNavigation(); // Hook from react-navigation library to access navigation prop
+  const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showLoading, setShowLoading] = useState(false);
   const [secure, setSecure] = useState(true);
-  const [visible, setVisible] = useState(false);
-
-  const onToggleSnackBar = () => setVisible(!visible);
-  const onDismissSnackBar = () => setVisible(false);
-
   const [error, setError] = useState({
     errorMessage: '',
     errorEmail: false,
     errorPassword: false,
     errorAccount: false,
   });
+
   // Function to toggle visibility of password text
   const toggleSecure = () => setSecure(!secure);
 
@@ -178,9 +166,6 @@ const SignInScreen = () => {
               >
                 R E G I S T E R
               </Button>
-              <Snackbar visible={visible} onDismiss={onDismissSnackBar}>
-                Hey there! I'm a Snackbar.
-              </Snackbar>
             </View>
           </View>
         </KeyboardAwareScrollView>

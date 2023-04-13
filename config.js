@@ -18,6 +18,7 @@ const firebaseConfig = {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(AsyncStorage),
+  experimentalForceLongPolling: true,
 });
 const db = getFirestore(app);
 

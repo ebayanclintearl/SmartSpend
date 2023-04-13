@@ -13,7 +13,7 @@ import SignUpSuccessScreen from '../screens/SignUpSuccessScreen';
 
 const Stack = createStackNavigator();
 
-function HomeStack() {
+function MainStack() {
   const { loggedIn, onboardingComplete, displaySignUpSuccess } =
     useContext(AppContext);
   return (
@@ -77,4 +77,4 @@ function HomeStack() {
     </Stack.Navigator>
   );
 }
-export default HomeStack;
+export default MainStack;

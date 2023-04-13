@@ -42,6 +42,7 @@ export const AppContextProvider = ({ children }) => {
   const [displaySignUpSuccess, setDisplaySignUpSuccess] = useState(false);
   const [errorFetchingUserData, setErrorFetchingUserData] = useState(false);
 
+  // Loads resources and prevents the SplashScreen from automatically hiding.
   useEffect(() => {
     const loadResources = async () => {
       try {
@@ -57,6 +58,7 @@ export const AppContextProvider = ({ children }) => {
     loadResources();
   }, []);
 
+  // Checks if the onboarding process is complete.
   useEffect(() => {
     const checkOnboardingStatus = async () => {
       try {
@@ -72,6 +74,7 @@ export const AppContextProvider = ({ children }) => {
     checkOnboardingStatus();
   }, []);
 
+  // This code block sets up a listener for changes in network connectivity
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
       setIsConnected(state.isConnected);
@@ -82,6 +85,9 @@ export const AppContextProvider = ({ children }) => {
     };
   }, []);
 
+  // This code block fetches data from Firestore based on a user's authentication and family code,
+  // sets state variables, and sets up listeners for changes to the family code and accounts.
+  // It returns an unsubscribe function to clean up the listeners when the component unmounts.
   const fetchOnlineData = async (userAuth) => {
     try {
       const userRef = doc(db, 'users', userAuth.uid);
@@ -130,6 +136,8 @@ export const AppContextProvider = ({ children }) => {
     }
   };
 
+  // This code block sets up a listener for changes in the authentication state using Firebase Auth
+  // and updates the user's data accordingly based on their authentication status and network connectivity.
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
@@ -166,6 +174,8 @@ export const AppContextProvider = ({ children }) => {
     return unsubscribe;
   }, []);
 
+  // This code block conditionally renders a loading indicator or an error message based on
+  // the state of isLoading and errorFetchingUserData, and returns null if the resources have not yet been loaded.
   if (!isResourcesLoaded) {
     return null;
   } else if (isLoading) {

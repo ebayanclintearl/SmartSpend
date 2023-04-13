@@ -18,6 +18,8 @@ const SearchScreen = () => {
 
   const onChangeSearch = (query) => setSearchQuery(query);
 
+  // This code filters the family's expense history based on the user's account type and search query.
+  // It returns an array of transactions that match the search query.
   const filteredTransactions = (
     familyCode.familyExpenseHistory &&
     Object.entries(familyCode?.familyExpenseHistory)

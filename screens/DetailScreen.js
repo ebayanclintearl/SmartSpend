@@ -16,6 +16,7 @@ const DetailScreen = ({ route }) => {
   const { transactionId } = route.params;
   const { userAccount, familyCode } = useContext(AppContext);
   const transaction = familyCode?.familyExpenseHistory[transactionId];
+
   const handleRemove = async () => {
     try {
       navigation.pop();

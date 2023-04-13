@@ -161,7 +161,6 @@ export const validateSuggestInputs = (amount, dateRange) => {
     errorCategory: false,
   };
 };
-
 export const validateSignUpInputs = (
   accountName,
   email,

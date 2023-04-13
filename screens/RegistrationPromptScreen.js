@@ -5,9 +5,8 @@ import { useNavigation } from '@react-navigation/native';
 import OrDivider from '../components/OrDivider';
 
 const RegistrationPromptScreen = () => {
-  // Initialize state variables
-  const navigation = useNavigation(); // Hook from react-navigation library to access navigation prop
-  // handlePress function handles the button press and navigates to appropriate registration screen
+  const navigation = useNavigation();
+
   const handlePress = (isFamilyProvider) => {
     if (isFamilyProvider) {
       navigation.navigate('SignUpScreen');

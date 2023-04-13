@@ -45,7 +45,6 @@ export const formatDateRange = (startDate, endDate) => {
   // Otherwise, format the date range with the full month name
   return `${startDay} ${startMonth} to ${endDay} ${endMonth} ${endYear}`;
 };
-
 export const formatDateAndTime = (date) => {
   const monthNames = [
     'January',
@@ -91,7 +90,6 @@ export const formatCurrency = (amount) => {
     .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
     .replace(/\s/g, '');
 };
-
 export const handleAmountChange = (value, setAmount) => {
   // Remove all non-numeric characters from the input
   const numericValue = isNaN(value)
@@ -139,8 +137,6 @@ export const handleAmountChange = (value, setAmount) => {
   // Update the state with the formatted value
   setAmount(formattedValue);
 };
-
-// Convert a hexadecimal color code to an RGBA color code with the specified opacity.
 export const hexToRgba = (hex, alpha) => {
   if (!hex) return;
   const r = parseInt(hex.slice(1, 3), 16); // Convert the red component of the hexadecimal color code to decimal.

@@ -4,7 +4,6 @@ import {
   StyleSheet,
   TouchableWithoutFeedback,
   TextInput as NativeTextInput,
-  TouchableOpacity,
   StatusBar,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
@@ -12,26 +11,17 @@ import {
   Appbar,
   Avatar,
   Button,
-  Card,
   TextInput,
   Text,
   Surface,
   List,
-  useTheme,
   HelperText,
 } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { expenseCategories, incomeCategories } from '../Helper/CategoriesData';
-import {
-  arrayUnion,
-  collection,
-  doc,
-  query,
-  setDoc,
-  updateDoc,
-} from 'firebase/firestore';
-import { AccountContext, AppContext } from '../Helper/Context';
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { AppContext } from '../Helper/Context';
 import { db } from '../config';
 import {
   formatDateAndTime,
@@ -91,9 +81,11 @@ const SegmentedButtons = ({ value, onValueChange, buttons }) => (
     ))}
   </View>
 );
+
 const AddScreen = ({ route }) => {
   const navigation = useNavigation();
   const { transactionId } = route.params ?? {};
+  const { userAccount, familyCode } = useContext(AppContext);
   const [date, setDate] = useState(new Date());
   const [dateString, setDateString] = useState('');
   const [amount, setAmount] = useState('');
@@ -110,9 +102,8 @@ const AddScreen = ({ route }) => {
     errorDescription: false,
     errorCategory: false,
   });
-  const { userAccount, familyCode } = useContext(AppContext);
-  const theme = useTheme();
 
+  // This code block sets up the initial state for a form
   useEffect(() => {
     if (transactionId) {
       const transactionInfo = familyCode?.familyExpenseHistory[transactionId];
@@ -128,6 +119,7 @@ const AddScreen = ({ route }) => {
     userAccount?.type === 'member' && setSegmentValue('expense');
   }, []);
 
+  // This code block clears the category field
   useEffect(() => {
     if (transactionId) return;
     setCategory(null);
