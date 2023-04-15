@@ -95,10 +95,10 @@ export const AppContextProvider = ({ children }) => {
       if (userDoc.exists()) {
         const user = userDoc.data();
         setUserAccount(user);
-        const codeRef = doc(db, 'familyCodes', user.code.toString());
-        const q = query(
+        const codeRef = doc(db, 'familyCodes', user.familyCode.toString());
+        const matchFamilyCodes = query(
           collection(db, 'users'),
-          where('code', '==', user.code)
+          where('familyCode', '==', user.familyCode)
         );
 
         const familyCodeUnsubscribe = onSnapshot(
@@ -116,7 +116,7 @@ export const AppContextProvider = ({ children }) => {
         );
 
         const accountsUnsubscribe = onSnapshot(
-          q,
+          matchFamilyCodes,
           (snapshot) => {
             const accounts = snapshot?.docs?.map((doc) => doc.data());
             setAccounts(accounts);

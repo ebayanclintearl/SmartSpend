@@ -48,16 +48,18 @@ const HomeTabNavigatorScreen = () => {
     account: AccountScreen,
   });
   return (
-    Object.keys(userAccount?.type || {}).length > 0 && (
+    Object.keys(userAccount?.accountType || {}).length > 0 && (
       <BottomNavigation
         navigationState={{
           index,
           routes:
-            userAccount?.type === 'provider' ? providerRoutes : memberRoutes,
+            userAccount?.accountType === 'provider'
+              ? providerRoutes
+              : memberRoutes,
         }}
         onIndexChange={setIndex}
         renderScene={
-          userAccount?.type === 'provider'
+          userAccount?.accountType === 'provider'
             ? providerRenderScene
             : memberRenderScene
         }

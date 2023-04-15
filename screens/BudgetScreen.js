@@ -44,16 +44,7 @@ import {
   validateSuggestInputs,
 } from '../Helper/Validation';
 import { AppContext } from '../Helper/Context';
-import {
-  collection,
-  deleteField,
-  doc,
-  onSnapshot,
-  query,
-  setDoc,
-  updateDoc,
-  where,
-} from 'firebase/firestore';
+import { deleteField, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../config';
 import uuid from 'react-native-uuid';
 import * as Device from 'expo-device';
@@ -162,83 +153,13 @@ const BudgetScreen = () => {
       Notifications.removeNotificationSubscription(responseListener.current);
     };
   }, []);
-
-  const removeNotifiedBudgetId = async (idToRemove) => {
-    const notifiedBudgetIds = await AsyncStorage.getItem('notifiedBudgetIds');
-    const notifiedBudgetIdsArray = notifiedBudgetIds
-      ? JSON.parse(notifiedBudgetIds)
-      : [];
-
-    const updatedNotifiedBudgetIds = JSON.stringify(
-      notifiedBudgetIdsArray.filter((id) => id !== idToRemove)
+  useEffect(() => {
+    sendBudgetNotifications(
+      budgetAllocationForDay,
+      budgetAllocationForWeek,
+      budgetAllocationForMonth
     );
-    await AsyncStorage.setItem('notifiedBudgetIds', updatedNotifiedBudgetIds);
-  };
-  const sendBudgetNotifications = async (
-    budgetAllocationForDay,
-    budgetAllocationForWeek,
-    budgetAllocationForMonth
-  ) => {
-    const budgets = [
-      ...budgetAllocationForDay,
-      ...budgetAllocationForWeek,
-      ...budgetAllocationForMonth,
-    ];
-
-    const percentageReached = budgets
-      .filter((budget) => budget.percentage >= 1)
-      .map((budget) => {
-        return { id: budget.id, description: budget.description };
-      });
-
-    // Retrieve list of IDs that have already triggered a notification
-    const notifiedBudgetIds = await AsyncStorage.getItem('notifiedBudgetIds');
-    const notifiedBudgetIdsArray = notifiedBudgetIds
-      ? JSON.parse(notifiedBudgetIds)
-      : [];
-
-    // Filter out previously notified budget IDs
-    const percentageToNotify = percentageReached.filter(
-      (budget) => !notifiedBudgetIdsArray.includes(budget.id)
-    );
-
-    // Filter and remove every dropped percentage from notified budget IDs
-    const percentageDrop = budgets
-      .filter(
-        (budget) =>
-          budget.percentage < 1 && notifiedBudgetIdsArray.includes(budget.id)
-      )
-      .forEach((budget) => {
-        removeNotifiedBudgetId(budget.id);
-      });
-
-    // Loop through percentageToNotify and send notifications for new IDs
-    const newNotifiedBudgetIds = [];
-    percentageToNotify.forEach((budget) => {
-      console.log('notify', budget.description);
-      Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Budget notification',
-          body: `You have reached your budget for ${budget.description}.`,
-        },
-        to: expoPushToken,
-        trigger: { seconds: 5 },
-      });
-      newNotifiedBudgetIds.push(budget.id);
-    });
-
-    // Store updated list of notified budget IDs
-    const updatedNotifiedBudgetIds = JSON.stringify([
-      ...notifiedBudgetIdsArray,
-      ...newNotifiedBudgetIds,
-    ]);
-    await AsyncStorage.setItem('notifiedBudgetIds', updatedNotifiedBudgetIds);
-  };
-  sendBudgetNotifications(
-    budgetAllocationForDay,
-    budgetAllocationForWeek,
-    budgetAllocationForMonth
-  );
+  }, [familyCode]);
 
   // helper functions
   const handleDateRangePress = () => setDateRangeExpanded(!dateRangeExpanded);
@@ -299,10 +220,20 @@ const BudgetScreen = () => {
     return { startDate, endDate };
   };
   const handleSheetChange = useCallback((index) => {
-    // if (index === -1) {
-    //   setAddAllocation(false);
-    //   setSuggestAllocation(false);
-    // }
+    if (index === -1) {
+      setError({
+        errorMessage: '',
+        errorDescription: false,
+        errorAmount: false,
+        errorDateRange: false,
+        errorCategory: false,
+      });
+      setShowLoading(false);
+      setDescription('');
+      setAmount('');
+      setDateRange('');
+      setCategory(null);
+    }
   }, []);
   const handleSnapPress = useCallback((index) => {
     sheetRef.current?.snapToIndex(index);
@@ -372,6 +303,75 @@ const BudgetScreen = () => {
 
     return result;
   }
+  async function sendBudgetNotifications(
+    budgetAllocationForDay,
+    budgetAllocationForWeek,
+    budgetAllocationForMonth
+  ) {
+    const budgets = [
+      ...budgetAllocationForDay,
+      ...budgetAllocationForWeek,
+      ...budgetAllocationForMonth,
+    ];
+    const percentageReached = budgets
+      .filter((budget) => budget.percentage >= 1)
+      .map((budget) => {
+        return { id: budget.id, description: budget.description };
+      });
+
+    // Retrieve list of IDs that have already triggered a notification
+    const notifiedBudgetIds = await AsyncStorage.getItem('notifiedBudgetIds');
+    const notifiedBudgetIdsArray = notifiedBudgetIds
+      ? JSON.parse(notifiedBudgetIds)
+      : [];
+
+    // Filter out previously notified budget IDs
+    const percentageToNotify = percentageReached.filter(
+      (budget) => !notifiedBudgetIdsArray.includes(budget.id)
+    );
+
+    // Filter and remove every dropped percentage from notified budget IDs
+    const percentageDrop = budgets
+      .filter(
+        (budget) =>
+          budget.percentage < 1 && notifiedBudgetIdsArray.includes(budget.id)
+      )
+      .forEach((budget) => {
+        removeNotifiedBudgetId(budget.id);
+      });
+
+    // Loop through percentageToNotify and send notifications for new IDs
+    const newNotifiedBudgetIds = [];
+    percentageToNotify.forEach((budget) => {
+      Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'Budget notification',
+          body: `You have reached your budget for ${budget.description}.`,
+        },
+        to: expoPushToken,
+        trigger: { seconds: 5 },
+      });
+      newNotifiedBudgetIds.push(budget.id);
+    });
+
+    // Store updated list of notified budget IDs
+    const updatedNotifiedBudgetIds = JSON.stringify([
+      ...notifiedBudgetIdsArray,
+      ...newNotifiedBudgetIds,
+    ]);
+    await AsyncStorage.setItem('notifiedBudgetIds', updatedNotifiedBudgetIds);
+  }
+  async function removeNotifiedBudgetId(idToRemove) {
+    const notifiedBudgetIds = await AsyncStorage.getItem('notifiedBudgetIds');
+    const notifiedBudgetIdsArray = notifiedBudgetIds
+      ? JSON.parse(notifiedBudgetIds)
+      : [];
+
+    const updatedNotifiedBudgetIds = JSON.stringify(
+      notifiedBudgetIdsArray.filter((id) => id !== idToRemove)
+    );
+    await AsyncStorage.setItem('notifiedBudgetIds', updatedNotifiedBudgetIds);
+  }
   const handleSave = async () => {
     const validationResult = validateCategoryAllocationInputs(
       description,
@@ -399,7 +399,11 @@ const BudgetScreen = () => {
         },
       };
 
-      const familyCodeRef = doc(db, 'familyCodes', userAccount.code.toString());
+      const familyCodeRef = doc(
+        db,
+        'familyCodes',
+        userAccount.familyCode.toString()
+      );
 
       await setDoc(
         familyCodeRef,
@@ -423,7 +427,7 @@ const BudgetScreen = () => {
       // Extract transaction category expenses from familyExpenseHistory
       const expenseHistory = familyCode.familyExpenseHistory;
       const familyCategoryExpenses = Object.entries(expenseHistory)
-        .filter(([key, transaction]) => transaction.type === 'expense')
+        .filter(([key, transaction]) => transaction.expenseType === 'expense')
         .map(([key, transaction]) => {
           return {
             category: transaction.category.title,
@@ -537,7 +541,6 @@ const BudgetScreen = () => {
     try {
       const validationResult = validateSuggestInputs(amount, dateRange);
       setError(validationResult);
-      console.log(error.errorMessage);
       if (validationResult.errorMessage) return;
 
       setShowLoading(true);
@@ -545,7 +548,11 @@ const BudgetScreen = () => {
         familyCode,
         parseFloat(amount.replace(/,/g, ''))
       );
-      const familyCodeRef = doc(db, 'familyCodes', userAccount.code.toString());
+      const familyCodeRef = doc(
+        db,
+        'familyCodes',
+        userAccount.familyCode.toString()
+      );
       await setDoc(
         familyCodeRef,
         {
@@ -565,7 +572,7 @@ const BudgetScreen = () => {
       const familyCodeRef = doc(
         db,
         'familyCodes',
-        userAccount?.code.toString()
+        userAccount?.familyCode.toString()
       );
       await updateDoc(familyCodeRef, {
         ['budgetAllocation.' + id]: deleteField(),

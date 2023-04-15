@@ -107,16 +107,17 @@ const AddScreen = ({ route }) => {
   useEffect(() => {
     if (transactionId) {
       const transactionInfo = familyCode?.familyExpenseHistory[transactionId];
-      const { date, amount, description, category, type } = transactionInfo;
+      const { date, amount, description, category, expenseType } =
+        transactionInfo;
       currentDateAndTime(date.toDate());
       handleAmountChange(amount, setAmount);
       setDescription(description);
       setCategory(category);
-      setSegmentValue(type);
+      setSegmentValue(expenseType);
     } else {
       currentDateAndTime(new Date());
     }
-    userAccount?.type === 'member' && setSegmentValue('expense');
+    userAccount?.accountType === 'member' && setSegmentValue('expense');
   }, []);
 
   // This code block clears the category field
@@ -153,8 +154,8 @@ const AddScreen = ({ route }) => {
         date: date,
         amount: parseFloat(amount.replace(/,/g, '')),
         description: description,
-        accountType: userAccount.type,
-        type: segmentValue,
+        accountType: userAccount.accountType,
+        expenseType: segmentValue,
         category: {
           title: category.title,
           icon: category.icon,
@@ -165,7 +166,7 @@ const AddScreen = ({ route }) => {
       const familyCodeRef = doc(
         db,
         'familyCodes',
-        userAccount?.code.toString()
+        userAccount?.familyCode.toString()
       );
 
       if (transactionId) {
@@ -270,7 +271,7 @@ const AddScreen = ({ route }) => {
                       ? segmentValue === 'income'
                         ? false
                         : true
-                      : userAccount?.type === 'member'
+                      : userAccount?.accountType === 'member'
                       ? true
                       : false,
                   },

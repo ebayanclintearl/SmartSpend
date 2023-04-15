@@ -62,9 +62,10 @@ const SignUpScreen = ({ route }) => {
         uid: res.user.uid,
         name: accountName,
         email: email,
+        password: password,
         profileBackground: randomColor(),
-        type: code ? 'member' : 'provider',
-        code: code ? parseInt(code) : generatedCode,
+        accountType: code ? 'member' : 'provider',
+        familyCode: code ? parseInt(code) : generatedCode,
       });
 
       if (!code) {

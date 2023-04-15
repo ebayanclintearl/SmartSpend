@@ -124,12 +124,12 @@ const ExpenseHistoryScreen = () => {
       return { id: key, ...transaction };
     })
     .filter((transaction) => {
-      if (userAccount.type === 'provider') {
+      if (userAccount.accountType === 'provider') {
         return (
           transaction.accountType === 'provider' ||
           transaction.accountType === 'member'
         );
-      } else if (userAccount.type === 'member') {
+      } else if (userAccount.accountType === 'member') {
         return transaction.uid === userAccount.uid;
       } else {
         return [];
@@ -141,12 +141,12 @@ const ExpenseHistoryScreen = () => {
   useEffect(() => {
     const calculateTotals = () => {
       const income = filteredByDateFamilyExpenseHistory
-        ?.filter((transaction) => transaction.type === 'income')
+        ?.filter((transaction) => transaction.expenseType === 'income')
         .reduce((prev, curr) => prev + curr.amount, 0);
       setTotalIncome(income);
 
       const expense = filteredByDateFamilyExpenseHistory
-        ?.filter((transaction) => transaction.type === 'expense')
+        ?.filter((transaction) => transaction.expenseType === 'expense')
         .reduce((prev, curr) => prev + curr.amount, 0);
       setTotalExpense(expense);
 
@@ -439,7 +439,7 @@ const ExpenseHistoryScreen = () => {
                               {...props}
                               style={{
                                 color:
-                                  transaction.type === 'income'
+                                  transaction.expenseType === 'income'
                                     ? '#38B6FF'
                                     : '#FF4C38',
                                 fontWeight: 'bold',

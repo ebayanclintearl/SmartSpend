@@ -80,7 +80,7 @@ const AccountScreen = () => {
                 {userAccount?.email}
               </Text>
               <Text variant="bodyLarge" style={{ color: '#7F8192' }}>
-                {userAccount?.type?.toUpperCase()}
+                {userAccount?.accountType?.toUpperCase()}
               </Text>
               <Text
                 variant="displaySmall"
@@ -90,7 +90,7 @@ const AccountScreen = () => {
                   textDecorationLine: 'underline',
                 }}
               >
-                {userAccount?.code}
+                {userAccount?.familyCode}
               </Text>
               <Text variant="bodyLarge" style={{ color: '#7F8192' }}>
                 Family Code
@@ -98,7 +98,9 @@ const AccountScreen = () => {
             </View>
             {accounts &&
               accounts
-                ?.filter((account) => account.type !== userAccount.type)
+                ?.filter(
+                  (account) => account.accountType !== userAccount.accountType
+                )
                 .map((account) => (
                   <View key={account.uid}>
                     <Text variant="titleLarge" style={{ padding: 10 }}>
@@ -142,7 +144,7 @@ const AccountScreen = () => {
                             borderRadius: 12,
                           }}
                         >
-                          {account.type === 'provider' ? (
+                          {account.accountType === 'provider' ? (
                             <Text
                               variant="labelLarge"
                               style={{ color: '#FF4C38' }}

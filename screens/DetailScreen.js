@@ -20,7 +20,7 @@ const DetailScreen = ({ route }) => {
   const handleRemove = async () => {
     try {
       navigation.pop();
-      const docRef = doc(db, 'familyCodes', userAccount?.code.toString());
+      const docRef = doc(db, 'familyCodes', userAccount?.familyCode.toString());
       await updateDoc(docRef, {
         ['familyExpenseHistory.' + transactionId]: deleteField(),
       });
@@ -97,7 +97,8 @@ const DetailScreen = ({ route }) => {
             <Text
               variant="displaySmall"
               style={{
-                color: transaction?.type === 'income' ? '#38B6FF' : '#FF4C38',
+                color:
+                  transaction?.expenseType === 'income' ? '#38B6FF' : '#FF4C38',
                 fontSize: 30,
               }}
             >

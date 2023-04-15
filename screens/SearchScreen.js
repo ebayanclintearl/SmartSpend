@@ -28,12 +28,12 @@ const SearchScreen = () => {
       return { id: key, ...transaction };
     })
     .filter((transaction) => {
-      if (userAccount.type === 'provider') {
+      if (userAccount.accountType === 'provider') {
         return (
           transaction.accountType === 'provider' ||
           transaction.accountType === 'member'
         );
-      } else if (userAccount.type === 'member') {
+      } else if (userAccount.accountType === 'member') {
         return transaction.uid === userAccount.uid;
       } else {
         return [];
@@ -148,7 +148,7 @@ const SearchScreen = () => {
                         {...props}
                         style={{
                           color:
-                            transaction.type === 'income'
+                            transaction.expenseType === 'income'
                               ? '#38B6FF'
                               : '#FF4C38',
                           fontWeight: 'bold',
