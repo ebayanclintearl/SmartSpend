@@ -629,11 +629,11 @@ const BudgetScreen = () => {
         borderRadius: 10,
         marginVertical: 2,
       }}
-      title={budget.description}
+      title={<Text style={{ fontWeight: 'bold' }}>{budget.description}</Text>}
       description={() => (
         <View style={{ width: '100%' }}>
-          <Text>budget: {formatCurrency(budget.amount)}</Text>
-          <Text>expense: {formatCurrency(budget.totalAmount)}</Text>
+          <Text>Budget: {formatCurrency(budget.amount)}</Text>
+          <Text>Expense: {formatCurrency(budget.totalAmount)}</Text>
           <ProgressBar
             progress={budget.percentage}
             color={budget.category.color}
@@ -1047,14 +1047,14 @@ const BudgetScreen = () => {
                   Budget Allocation Algorithm
                 </Text>
                 <Text style={{ textAlign: 'center' }}>
-                  Description: The algorithm automatically allocates a user's
-                  budget to different expense categories based on their past
-                  spending habits. It calculates the total expenses for each
-                  category, sorts them by total expenses in descending order,
-                  assigns budgets to each category based on variance and
-                  frequency of spending, and allocates any remaining budget
-                  evenly across categories if necessary. The output is a list of
-                  suggested budgets for each expense category.
+                  The algorithm automatically allocates a user's budget to
+                  different expense categories based on their past spending
+                  habits. It calculates the total expenses for each category,
+                  sorts them by total expenses in descending order, assigns
+                  budgets to each category based on variance and frequency of
+                  spending, and allocates any remaining budget evenly across
+                  categories if necessary. The output is a list of suggested
+                  budgets for each expense category.
                 </Text>
 
                 {/* budget */}

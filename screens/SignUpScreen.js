@@ -1,6 +1,12 @@
 import { Image, StatusBar, StyleSheet, View } from 'react-native';
 import React, { useContext, useState } from 'react';
-import { TextInput, Button, Text, HelperText } from 'react-native-paper';
+import {
+  TextInput,
+  Button,
+  Text,
+  HelperText,
+  Snackbar,
+} from 'react-native-paper';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, db } from '../config';
 import { doc, setDoc } from 'firebase/firestore';
@@ -22,6 +28,7 @@ const SignUpScreen = ({ route }) => {
   const [showLoading, setShowLoading] = useState(false);
   const [securePassword, setSecurePassword] = useState(true);
   const [secureConfirmPassword, setSecureConfirmPassword] = useState(true);
+  const [showSnackBar, setShowSnackBar] = useState(false);
   const [error, setError] = useState({
     errorMessage: '',
     errorAccountName: false,
@@ -31,10 +38,11 @@ const SignUpScreen = ({ route }) => {
     errorFamilyCode: false,
   });
 
-  // Function to toggle visibility of password text
+  // Function to toggle
   const toggleSecurePassword = () => setSecurePassword(!securePassword);
   const toggleSecureConfirmPassword = () =>
     setSecureConfirmPassword(!secureConfirmPassword);
+  const onDismissSnackBar = () => setShowSnackBar(false);
 
   // Function to handle sign up button press
   const handleSignUp = async () => {
@@ -82,6 +90,9 @@ const SignUpScreen = ({ route }) => {
       console.log('SignUp', error.code);
       setShowLoading(false);
       setDisplaySignUpSuccess(false);
+      if (error.code === 'auth/network-request-failed') {
+        setShowSnackBar(true);
+      }
       if (error.code === 'auth/email-already-in-use') {
         setError({
           errorMessage: 'Email already in use',
@@ -275,6 +286,9 @@ const SignUpScreen = ({ route }) => {
             </View>
           </View>
         </KeyboardAwareScrollView>
+        <Snackbar visible={showSnackBar} onDismiss={onDismissSnackBar}>
+          Network Error.
+        </Snackbar>
       </SafeAreaView>
     </>
   );

@@ -1,6 +1,12 @@
 import { Image, StatusBar, StyleSheet, View } from 'react-native';
 import React, { useState } from 'react';
-import { Button, Text, TextInput, HelperText } from 'react-native-paper';
+import {
+  Button,
+  Text,
+  TextInput,
+  HelperText,
+  Snackbar,
+} from 'react-native-paper';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config';
 import { validateSignInInputs } from '../Helper/Validation';
@@ -13,6 +19,7 @@ const SignInScreen = () => {
   const [password, setPassword] = useState('');
   const [showLoading, setShowLoading] = useState(false);
   const [secure, setSecure] = useState(true);
+  const [showSnackBar, setShowSnackBar] = useState(false);
   const [error, setError] = useState({
     errorMessage: '',
     errorEmail: false,
@@ -20,8 +27,9 @@ const SignInScreen = () => {
     errorAccount: false,
   });
 
-  // Function to toggle visibility of password text
+  // Function to toggle
   const toggleSecure = () => setSecure(!secure);
+  const onDismissSnackBar = () => setShowSnackBar(false);
 
   // Function to handle sign in button press
   const handleSignIn = async () => {
@@ -37,6 +45,9 @@ const SignInScreen = () => {
       setShowLoading(false);
     } catch (error) {
       console.log('SignIn', error.code);
+      if (error.code === 'auth/network-request-failed') {
+        setShowSnackBar(true);
+      }
       setError({
         errorMessage: 'Invalid email/password',
         errorEmail: false,
@@ -169,6 +180,9 @@ const SignInScreen = () => {
             </View>
           </View>
         </KeyboardAwareScrollView>
+        <Snackbar visible={showSnackBar} onDismiss={onDismissSnackBar}>
+          Network Error.
+        </Snackbar>
       </SafeAreaView>
     </>
   );

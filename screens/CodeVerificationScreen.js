@@ -93,7 +93,7 @@ const CodeVerificationScreen = () => {
                 Enter Code
               </Text>
               <Text variant="bodyLarge" style={{ color: '#151940' }}>
-                Ask your Family Head for the Family Code generated on their
+                Ask your Family Provider for the Family Code generated on their
                 account screen.
               </Text>
             </View>
