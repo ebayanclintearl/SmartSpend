@@ -80,7 +80,6 @@ const SignUpScreen = ({ route }) => {
         const codeRef = doc(db, 'familyCodes', generatedCode.toString());
         await setDoc(codeRef, {
           familyExpenseHistory: {},
-          budgetAllocation: {},
         });
       }
 

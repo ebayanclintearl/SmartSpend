@@ -6,13 +6,12 @@ import SearchScreen from '../screens/SearchScreen';
 
 const Stack = createStackNavigator();
 
-const HomeTabStack = () => {
+const HomeTabStack = (props) => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen
-        name="ExpenseHistoryScreen"
-        component={ExpenseHistoryScreen}
-      />
+      <Stack.Screen name="ExpenseHistoryScreen">
+        {() => <ExpenseHistoryScreen jumpTo={props.jumpTo} />}
+      </Stack.Screen>
       <Stack.Screen name="AddScreen" component={AddScreen} />
       <Stack.Screen name="DetailScreen" component={DetailScreen} />
       <Stack.Screen name="SearchScreen" component={SearchScreen} />

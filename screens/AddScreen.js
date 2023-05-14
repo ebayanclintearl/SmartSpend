@@ -70,7 +70,7 @@ const SegmentedButtons = ({ value, onValueChange, buttons }) => (
             value === buttonValue
               ? '#FFFFFF'
               : disabled
-              ? '#7F8192'
+              ? '#c5c5c7'
               : '#151940',
         }}
         onPress={() => onValueChange(buttonValue)}

@@ -96,17 +96,18 @@ const AccountScreen = () => {
                 Family Code
               </Text>
             </View>
-            {accounts &&
-              accounts
-                ?.filter(
-                  (account) => account.accountType !== userAccount.accountType
-                )
-                .map((account) => (
-                  <View key={account.uid}>
-                    <Text variant="titleLarge" style={{ padding: 10 }}>
-                      Linked Account(s)
-                    </Text>
+            {accounts && (
+              <View>
+                <Text variant="titleLarge" style={{ padding: 10 }}>
+                  Linked Accounts
+                </Text>
+                {accounts
+                  ?.filter(
+                    (account) => account.accountType !== userAccount.accountType
+                  )
+                  .map((account) => (
                     <List.Item
+                      key={account.uid}
                       title={account.name}
                       description={account.email}
                       descriptionNumberOfLines={1}
@@ -162,8 +163,9 @@ const AccountScreen = () => {
                         </View>
                       )}
                     />
-                  </View>
-                ))}
+                  ))}
+              </View>
+            )}
           </View>
         </ScrollView>
       </View>

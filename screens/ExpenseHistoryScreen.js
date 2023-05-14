@@ -1,4 +1,4 @@
-import { StatusBar, StyleSheet, View } from 'react-native';
+import { StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
 import React, { useContext, useEffect, useState } from 'react';
 
 import {
@@ -9,6 +9,8 @@ import {
   FAB,
   IconButton,
   List,
+  Modal,
+  Portal,
   Surface,
   Text,
 } from 'react-native-paper';
@@ -21,6 +23,8 @@ import {
   formatDateRange,
 } from '../Helper/FormatFunctions';
 import { ScrollView } from 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Image } from 'react-native';
 
 const SegmentedButtons = ({ value, onValueChange, buttons }) => (
   <View
@@ -55,21 +59,21 @@ const SegmentedButtons = ({ value, onValueChange, buttons }) => (
     ))}
   </View>
 );
-const ExpenseHistoryScreen = () => {
+const ExpenseHistoryScreen = ({ jumpTo }) => {
   const navigation = useNavigation();
-  const { userAccount, familyCode } = useContext(AppContext);
-  const [value, setValue] = useState('monthly');
+  const { userAccount, familyCode, accounts } = useContext(AppContext);
+  const [value, setValue] = useState('month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [totalBalance, setTotalBalance] = useState(0);
   const [totalIncome, setTotalIncome] = useState(0);
   const [totalExpense, setTotalExpense] = useState(0);
 
-  // This code block sets the current date based on the selected value of a frequency filter (daily, weekly, monthly)
+  // This code block sets the current date based on the selected value of a frequency filter (day, week, month)
   useEffect(() => {
     const newCurrentDate = new Date();
-    if (value === 'daily') {
+    if (value === 'day') {
       setCurrentDate(newCurrentDate);
-    } else if (value === 'weekly') {
+    } else if (value === 'week') {
       const weekStart = newCurrentDate.getDate() - newCurrentDate.getDay() + 1; // Monday of the current week
       setCurrentDate(
         new Date(
@@ -78,14 +82,14 @@ const ExpenseHistoryScreen = () => {
           weekStart
         )
       );
-    } else if (value === 'monthly') {
+    } else if (value === 'month') {
       setCurrentDate(
         new Date(newCurrentDate.getFullYear(), newCurrentDate.getMonth(), 1)
       );
     }
   }, [value, setCurrentDate]);
 
-  // This code filters the family expenses by the selected time period (daily, weekly, or monthly)
+  // This code filters the family expenses by the selected time period (day, week, or month)
   // and then sorts the transactions in reverse chronological order. It also maps the transaction objects to include their corresponding IDs.
   // Finally, it filters the transactions based on the user account type (provider or member).
   // The resulting array contains the filtered and sorted family expenses ready to be displayed in the app.
@@ -94,13 +98,13 @@ const ExpenseHistoryScreen = () => {
   )
     ?.filter(([key, transaction]) => {
       const transactionDate = transaction?.date?.toDate();
-      if (value === 'daily') {
+      if (value === 'day') {
         return (
           transactionDate.getDate() === currentDate.getDate() &&
           transactionDate.getMonth() === currentDate.getMonth() &&
           transactionDate.getFullYear() === currentDate.getFullYear()
         );
-      } else if (value === 'weekly') {
+      } else if (value === 'week') {
         const monday = new Date(currentDate.getTime());
         monday.setDate(currentDate.getDate() - currentDate.getDay() + 1);
         const sunday = new Date(monday.getTime());
@@ -108,7 +112,7 @@ const ExpenseHistoryScreen = () => {
         sunday.setHours(23, 59, 59, 0);
 
         return transactionDate >= monday && transactionDate <= sunday;
-      } else if (value === 'monthly') {
+      } else if (value === 'month') {
         return (
           transactionDate.getMonth() === currentDate.getMonth() &&
           transactionDate.getFullYear() === currentDate.getFullYear()
@@ -136,6 +140,44 @@ const ExpenseHistoryScreen = () => {
       }
     });
 
+  const filteredByDateAccountBudgetAllocation = Object.entries(
+    familyCode?.accountBudgetAllocation || {}
+  )
+    ?.filter(([key, budget]) => {
+      const startDate = budget.dateRangeStart.toDate();
+      const endDate = budget.dateRangeEnd.toDate();
+
+      if (value === 'day') {
+        return (
+          startDate.getDate() === currentDate.getDate() &&
+          startDate.getMonth() === currentDate.getMonth() &&
+          startDate.getFullYear() === currentDate.getFullYear() &&
+          budget.dateRange === 'day'
+        );
+      } else if (value === 'week') {
+        const monday = new Date(currentDate.getTime());
+        monday.setDate(currentDate.getDate() - currentDate.getDay() + 1);
+        const sunday = new Date(monday.getTime());
+        sunday.setDate(monday.getDate() + 6);
+        sunday.setHours(23, 59, 59, 0);
+        return (
+          startDate >= monday &&
+          endDate <= sunday &&
+          budget.dateRange === 'week'
+        );
+      } else if (value === 'month') {
+        return (
+          startDate.getMonth() === currentDate.getMonth() &&
+          startDate.getFullYear() === currentDate.getFullYear() &&
+          budget.dateRange === 'month'
+        );
+      }
+    })
+    .filter(([key, budget]) => {
+      return budget.account.uid === userAccount.uid;
+    })
+    .map(([key, budget]) => ({ id: key, ...budget }));
+
   // This code block calculates the total income, total expense, and total balance based on the filtered family expense history.
   // It runs whenever the filteredByDateFamilyExpenseHistory state changes.
   useEffect(() => {
@@ -143,7 +185,12 @@ const ExpenseHistoryScreen = () => {
       const income = filteredByDateFamilyExpenseHistory
         ?.filter((transaction) => transaction.expenseType === 'income')
         .reduce((prev, curr) => prev + curr.amount, 0);
-      setTotalIncome(income);
+
+      setTotalIncome(
+        userAccount.accountType === 'member'
+          ? filteredByDateAccountBudgetAllocation[0]?.amount ?? 0
+          : income
+      );
 
       const expense = filteredByDateFamilyExpenseHistory
         ?.filter((transaction) => transaction.expenseType === 'expense')
@@ -155,12 +202,15 @@ const ExpenseHistoryScreen = () => {
     };
 
     calculateTotals();
-  }, [filteredByDateFamilyExpenseHistory]);
+  }, [
+    filteredByDateFamilyExpenseHistory,
+    filteredByDateAccountBudgetAllocation,
+  ]);
 
   const offsetMap = {
-    daily: { days: 1 },
-    weekly: { weeks: 1 },
-    monthly: { months: 1 },
+    day: { days: 1 },
+    week: { weeks: 1 },
+    month: { months: 1 },
   };
   const handlePreviousDate = () => {
     const { days = 0, weeks = 0, months = 0, years = 0 } = offsetMap[value];
@@ -182,6 +232,59 @@ const ExpenseHistoryScreen = () => {
       )
     );
   };
+  const [visible, setVisible] = useState(false);
+
+  const showModal = () => setVisible(true);
+  const hideModal = () => setVisible(false);
+
+  useEffect(() => {
+    // Remove budget IDs from AsyncStorage that are not present in accountBudgetAllocation
+    const removeShownBudgetIds = async () => {
+      const shownBudgetIds = await AsyncStorage.getItem('shownBudgetIds');
+      const shownBudgetIdsArray = shownBudgetIds
+        ? JSON.parse(shownBudgetIds)
+        : [];
+      const accountBudgetAllocation = familyCode?.accountBudgetAllocation;
+      if (!Object.keys(accountBudgetAllocation || {}).length) return;
+      const updatedShownBudgetIds = shownBudgetIdsArray.filter((id) =>
+        accountBudgetAllocation.hasOwnProperty(id)
+      );
+      await AsyncStorage.setItem(
+        'shownBudgetIds',
+        JSON.stringify(updatedShownBudgetIds)
+      );
+    };
+    const fetchBudgetAllocation = async () => {
+      if (
+        filteredByDateAccountBudgetAllocation &&
+        filteredByDateAccountBudgetAllocation.length > 0
+      ) {
+        const budgetId = filteredByDateAccountBudgetAllocation[0].id;
+        // Check if the budget ID has been shown before
+        const shownBudgetIds = await AsyncStorage.getItem('shownBudgetIds');
+        const shownBudgetIdsArray = shownBudgetIds
+          ? JSON.parse(shownBudgetIds)
+          : [];
+        const hasShown = shownBudgetIdsArray.includes(budgetId);
+        if (!hasShown) {
+          showModal();
+          // Store the shown budget ID to prevent showing the modal again
+          shownBudgetIdsArray.push(budgetId);
+          await AsyncStorage.setItem(
+            'shownBudgetIds',
+            JSON.stringify(shownBudgetIdsArray)
+          );
+        }
+      }
+    };
+    if (
+      filteredByDateAccountBudgetAllocation.length > 0 &&
+      filteredByDateAccountBudgetAllocation[0].dateRange === value
+    ) {
+      removeShownBudgetIds();
+      fetchBudgetAllocation();
+    }
+  }, [filteredByDateAccountBudgetAllocation, value]);
   return (
     <>
       <StatusBar
@@ -192,24 +295,36 @@ const ExpenseHistoryScreen = () => {
       <Appbar.Header style={{ backgroundColor: '#FFFFFF' }}>
         <Appbar.Content
           title={
-            <View style={{ flexDirection: 'row' }}>
-              <Avatar.Text
-                size={35}
-                label={userAccount?.name?.slice(0, 1)?.toUpperCase()}
-                style={{
-                  backgroundColor: userAccount?.profileBackground,
-                  marginRight: 5,
-                }}
-                labelStyle={{ color: 'white', top: 2 }}
-              />
-              <View>
-                <Text variant="labelMedium" style={{ color: '#7F8192' }}>
-                  Welcome!
-                </Text>
-                <Text variant="titleSmall">
-                  {userAccount?.name?.split(' ')[0]}
-                </Text>
-              </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <TouchableOpacity
+                style={{ flexDirection: 'row', alignItems: 'center' }}
+                onPress={() => jumpTo('account')}
+              >
+                <IconButton
+                  icon={() => (
+                    <Text
+                      variant="bodyMedium"
+                      style={{
+                        color: 'white',
+                        top: 3,
+                        fontSize: 18,
+                      }}
+                    >
+                      {userAccount?.name?.slice(0, 1)?.toUpperCase()}
+                    </Text>
+                  )}
+                  containerColor={userAccount?.profileBackground}
+                  size={20}
+                />
+                <View>
+                  <Text variant="labelMedium" style={{ color: '#7F8192' }}>
+                    Welcome!
+                  </Text>
+                  <Text variant="titleSmall">
+                    {userAccount?.name?.split(' ')[0]}
+                  </Text>
+                </View>
+              </TouchableOpacity>
             </View>
           }
         />
@@ -222,6 +337,88 @@ const ExpenseHistoryScreen = () => {
         />
       </Appbar.Header>
       <View style={styles.container}>
+        <Portal>
+          <Modal
+            visible={visible}
+            onDismiss={hideModal}
+            contentContainerStyle={{
+              backgroundColor: 'white',
+              padding: 20,
+              margin: 10,
+              borderRadius: 10,
+            }}
+          >
+            {filteredByDateAccountBudgetAllocation?.map(
+              ({ id, providerName, amount, description, dateRange }) => (
+                <View key={id}>
+                  <IconButton
+                    icon="close"
+                    iconColor={'black'}
+                    size={32}
+                    style={{ alignSelf: 'flex-end' }}
+                    onPress={() => hideModal()}
+                  />
+                  <View
+                    style={{
+                      width: '100%',
+                      height: 75,
+                      marginVertical: 5,
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Image
+                      resizeMode="contain"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                      }}
+                      source={require('../assets/AppAssets/popup_icon.png')}
+                    />
+                  </View>
+
+                  <Text
+                    variant="displayMedium"
+                    style={{ fontSize: 25, textAlign: 'center' }}
+                  >
+                    {providerName}
+                  </Text>
+                  <Text>The provider has allocated a budget for you.</Text>
+                  <Text
+                    style={{
+                      textAlign: 'center',
+                    }}
+                  >
+                    Details
+                  </Text>
+                  <Text
+                    variant="displaySmall"
+                    style={{
+                      color: '#38B6FF',
+                      fontSize: 30,
+                      textAlign: 'center',
+                    }}
+                  >
+                    Php {formatCurrency(amount)}
+                  </Text>
+                  <Text
+                    style={{
+                      textAlign: 'center',
+                    }}
+                  >
+                    {description}
+                  </Text>
+                  <Text
+                    style={{
+                      textAlign: 'center',
+                    }}
+                  >
+                    Duration: {dateRange}
+                  </Text>
+                </View>
+              )
+            )}
+          </Modal>
+        </Portal>
         <ScrollView>
           <View style={{ paddingHorizontal: '3%', marginTop: 1 }}>
             <View
@@ -289,7 +486,9 @@ const ExpenseHistoryScreen = () => {
                       variant="titleSmall"
                       style={{ color: '#7F8192', textAlign: 'center' }}
                     >
-                      Family Budget
+                      {userAccount.accountType === 'provider'
+                        ? 'Family Budget'
+                        : 'Budget Limit'}
                     </Text>
                   </Card.Content>
                 </Card>
@@ -348,14 +547,14 @@ const ExpenseHistoryScreen = () => {
                   onValueChange={setValue}
                   buttons={[
                     {
-                      value: 'monthly',
+                      value: 'month',
                       label: 'Month',
                     },
                     {
-                      value: 'weekly',
+                      value: 'week',
                       label: 'Week',
                     },
-                    { value: 'daily', label: 'Day' },
+                    { value: 'day', label: 'Day' },
                   ]}
                 />
               </View>
@@ -375,7 +574,7 @@ const ExpenseHistoryScreen = () => {
                   onPress={handlePreviousDate}
                 />
                 <Text variant="bodyLarge" style={{ color: '#7F8192' }}>
-                  {value === 'weekly'
+                  {value === 'week'
                     ? formatDateRange(
                         currentDate,
                         new Date(
@@ -400,7 +599,7 @@ const ExpenseHistoryScreen = () => {
               }}
             >
               <Card.Content>
-                <Text variant="titleLarge">Expense History</Text>
+                <Text variant="titleLarge">Recent History</Text>
                 {filteredByDateFamilyExpenseHistory?.map(
                   (transaction, index) => {
                     return (

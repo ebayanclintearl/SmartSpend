@@ -20,6 +20,14 @@ export const validateTransactionInputs = (
       errorDescription: false,
       errorCategory: false,
     };
+  } else if (amount.trim() === '0' && amount.length === 1) {
+    return {
+      errorMessage: 'Please enter an amount greater than 0',
+      errorDescription: false,
+      errorAmount: true,
+      errorDateRange: false,
+      errorCategory: false,
+    };
   } else if (!/^\d{1,3}(,\d{3})*(\.\d{1,2})?$/.test(amount)) {
     return {
       errorMessage:
@@ -66,7 +74,7 @@ export const validateCategoryAllocationInputs = (
   description,
   amount,
   dateRange,
-  category
+  selection
 ) => {
   if (!description.trim()) {
     return {
@@ -74,7 +82,7 @@ export const validateCategoryAllocationInputs = (
       errorDescription: true,
       errorAmount: false,
       errorDateRange: false,
-      errorCategory: false,
+      errorSelection: false,
     };
   } else if (description.trim().length > 30) {
     return {
@@ -82,7 +90,7 @@ export const validateCategoryAllocationInputs = (
       errorDescription: true,
       errorAmount: false,
       errorDateRange: false,
-      errorCategory: false,
+      errorSelection: false,
     };
   } else if (!amount.trim()) {
     return {
@@ -90,7 +98,15 @@ export const validateCategoryAllocationInputs = (
       errorDescription: false,
       errorAmount: true,
       errorDateRange: false,
-      errorCategory: false,
+      errorSelection: false,
+    };
+  } else if (amount.trim() === '0' && amount.length === 1) {
+    return {
+      errorMessage: 'Please enter an amount greater than 0',
+      errorDescription: false,
+      errorAmount: true,
+      errorDateRange: false,
+      errorSelection: false,
     };
   } else if (!/^\d{1,3}(,\d{3})*(\.\d{1,2})?$/.test(amount)) {
     return {
@@ -99,7 +115,7 @@ export const validateCategoryAllocationInputs = (
       errorDescription: false,
       errorAmount: true,
       errorDateRange: false,
-      errorCategory: false,
+      errorSelection: false,
     };
   } else if (!dateRange.trim()) {
     return {
@@ -107,15 +123,15 @@ export const validateCategoryAllocationInputs = (
       errorDescription: false,
       errorAmount: false,
       errorDateRange: true,
-      errorCategory: false,
+      errorSelection: false,
     };
-  } else if (category === null) {
+  } else if (selection === null) {
     return {
-      errorMessage: 'Empty category',
+      errorMessage: 'Please make a selection',
       errorDescription: false,
       errorAmount: false,
       errorDateRange: false,
-      errorCategory: true,
+      errorSelection: true,
     };
   }
   return {
@@ -123,7 +139,7 @@ export const validateCategoryAllocationInputs = (
     errorDescription: false,
     errorAmount: false,
     errorDateRange: false,
-    errorCategory: false,
+    errorSelection: false,
   };
 };
 export const validateSuggestInputs = (amount, dateRange) => {
@@ -133,7 +149,15 @@ export const validateSuggestInputs = (amount, dateRange) => {
       errorDescription: false,
       errorAmount: true,
       errorDateRange: false,
-      errorCategory: false,
+      errorSelection: false,
+    };
+  } else if (amount.trim() === '0' && amount.length === 1) {
+    return {
+      errorMessage: 'Please enter an amount greater than 0',
+      errorDescription: false,
+      errorAmount: true,
+      errorDateRange: false,
+      errorSelection: false,
     };
   } else if (!/^\d{1,3}(,\d{3})*(\.\d{1,2})?$/.test(amount)) {
     return {
@@ -142,7 +166,7 @@ export const validateSuggestInputs = (amount, dateRange) => {
       errorDescription: false,
       errorAmount: true,
       errorDateRange: false,
-      errorCategory: false,
+      errorSelection: false,
     };
   } else if (!dateRange.trim()) {
     return {
@@ -150,7 +174,7 @@ export const validateSuggestInputs = (amount, dateRange) => {
       errorDescription: false,
       errorAmount: false,
       errorDateRange: true,
-      errorCategory: false,
+      errorSelection: false,
     };
   }
   return {
@@ -158,7 +182,7 @@ export const validateSuggestInputs = (amount, dateRange) => {
     errorDescription: false,
     errorAmount: false,
     errorDateRange: false,
-    errorCategory: false,
+    errorSelection: false,
   };
 };
 export const validateSignUpInputs = (
