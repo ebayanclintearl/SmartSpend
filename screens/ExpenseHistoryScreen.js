@@ -61,33 +61,14 @@ const SegmentedButtons = ({ value, onValueChange, buttons }) => (
 );
 const ExpenseHistoryScreen = ({ jumpTo }) => {
   const navigation = useNavigation();
-  const { userAccount, familyCode, accounts } = useContext(AppContext);
+  const { userAccount, familyCode, setBalancePromptLimit } =
+    useContext(AppContext);
   const [value, setValue] = useState('month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [totalBalance, setTotalBalance] = useState(0);
   const [totalIncome, setTotalIncome] = useState(0);
   const [totalExpense, setTotalExpense] = useState(0);
-
-  // This code block sets the current date based on the selected value of a frequency filter (day, week, month)
-  useEffect(() => {
-    const newCurrentDate = new Date();
-    if (value === 'day') {
-      setCurrentDate(newCurrentDate);
-    } else if (value === 'week') {
-      const weekStart = newCurrentDate.getDate() - newCurrentDate.getDay() + 1; // Monday of the current week
-      setCurrentDate(
-        new Date(
-          newCurrentDate.getFullYear(),
-          newCurrentDate.getMonth(),
-          weekStart
-        )
-      );
-    } else if (value === 'month') {
-      setCurrentDate(
-        new Date(newCurrentDate.getFullYear(), newCurrentDate.getMonth(), 1)
-      );
-    }
-  }, [value, setCurrentDate]);
+  const [visible, setVisible] = useState(false);
 
   // This code filters the family expenses by the selected time period (day, week, or month)
   // and then sorts the transactions in reverse chronological order. It also maps the transaction objects to include their corresponding IDs.
@@ -174,39 +155,13 @@ const ExpenseHistoryScreen = ({ jumpTo }) => {
       }
     })
     .filter(([key, budget]) => {
-      return budget.account.uid === userAccount.uid;
+      return budget.selectedAccount.uid === userAccount.uid;
     })
     .map(([key, budget]) => ({ id: key, ...budget }));
 
-  // This code block calculates the total income, total expense, and total balance based on the filtered family expense history.
-  // It runs whenever the filteredByDateFamilyExpenseHistory state changes.
-  useEffect(() => {
-    const calculateTotals = () => {
-      const income = filteredByDateFamilyExpenseHistory
-        ?.filter((transaction) => transaction.expenseType === 'income')
-        .reduce((prev, curr) => prev + curr.amount, 0);
-
-      setTotalIncome(
-        userAccount.accountType === 'member'
-          ? filteredByDateAccountBudgetAllocation[0]?.amount ?? 0
-          : income
-      );
-
-      const expense = filteredByDateFamilyExpenseHistory
-        ?.filter((transaction) => transaction.expenseType === 'expense')
-        .reduce((prev, curr) => prev + curr.amount, 0);
-      setTotalExpense(expense);
-
-      const balance = totalIncome - totalExpense;
-      setTotalBalance(balance);
-    };
-
-    calculateTotals();
-  }, [
-    filteredByDateFamilyExpenseHistory,
-    filteredByDateAccountBudgetAllocation,
-  ]);
-
+  // Helper Functions
+  const showModal = () => setVisible(true);
+  const hideModal = () => setVisible(false);
   const offsetMap = {
     day: { days: 1 },
     week: { weeks: 1 },
@@ -232,11 +187,29 @@ const ExpenseHistoryScreen = ({ jumpTo }) => {
       )
     );
   };
-  const [visible, setVisible] = useState(false);
 
-  const showModal = () => setVisible(true);
-  const hideModal = () => setVisible(false);
-
+  // UseEffects
+  // This code block sets the current date based on the selected value of a frequency filter (day, week, month)
+  useEffect(() => {
+    const newCurrentDate = new Date();
+    if (value === 'day') {
+      setCurrentDate(newCurrentDate);
+    } else if (value === 'week') {
+      const weekStart = newCurrentDate.getDate() - newCurrentDate.getDay() + 1; // Monday of the current week
+      setCurrentDate(
+        new Date(
+          newCurrentDate.getFullYear(),
+          newCurrentDate.getMonth(),
+          weekStart
+        )
+      );
+    } else if (value === 'month') {
+      setCurrentDate(
+        new Date(newCurrentDate.getFullYear(), newCurrentDate.getMonth(), 1)
+      );
+    }
+  }, [value, setCurrentDate]);
+  // This code block handles showing modal from budget allocation
   useEffect(() => {
     // Remove budget IDs from AsyncStorage that are not present in accountBudgetAllocation
     const removeShownBudgetIds = async () => {
@@ -285,6 +258,36 @@ const ExpenseHistoryScreen = ({ jumpTo }) => {
       fetchBudgetAllocation();
     }
   }, [filteredByDateAccountBudgetAllocation, value]);
+  // This code block calculates the total income, total expense, and total balance based on the filtered family expense history.
+  // It runs whenever the filteredByDateFamilyExpenseHistory state changes.
+  useEffect(() => {
+    const calculateTotals = () => {
+      const income = filteredByDateFamilyExpenseHistory
+        ?.filter((transaction) => transaction.expenseType === 'income')
+        .reduce((prev, curr) => prev + curr.amount, 0);
+
+      setTotalIncome(
+        userAccount.accountType === 'member'
+          ? filteredByDateAccountBudgetAllocation[0]?.amount ?? 0
+          : income
+      );
+
+      const expense = filteredByDateFamilyExpenseHistory
+        ?.filter((transaction) => transaction.expenseType === 'expense')
+        .reduce((prev, curr) => prev + curr.amount, 0);
+      setTotalExpense(expense);
+
+      const balance = totalIncome - totalExpense;
+      setTotalBalance(balance);
+      setBalancePromptLimit(balance);
+    };
+
+    calculateTotals();
+  }, [
+    filteredByDateFamilyExpenseHistory,
+    filteredByDateAccountBudgetAllocation,
+  ]);
+
   return (
     <>
       <StatusBar

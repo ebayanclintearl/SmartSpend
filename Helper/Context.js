@@ -35,12 +35,13 @@ export const AppContextProvider = ({ children }) => {
   const [userAccount, setUserAccount] = useState({});
   const [familyCode, setFamilyCode] = useState({});
   const [isConnected, setIsConnected] = useState(true);
-  const [accounts, setAccounts] = useState();
+  const [accounts, setAccounts] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [isResourcesLoaded, setIsResourcesLoaded] = useState(false);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
   const [displaySignUpSuccess, setDisplaySignUpSuccess] = useState(false);
   const [errorFetchingUserData, setErrorFetchingUserData] = useState(false);
+  const [balancePromptLimit, setBalancePromptLimit] = useState('0');
 
   // Loads resources and prevents the SplashScreen from automatically hiding.
   useEffect(() => {
@@ -222,6 +223,8 @@ export const AppContextProvider = ({ children }) => {
         setDisplaySignUpSuccess,
         onboardingComplete,
         setOnboardingComplete,
+        balancePromptLimit,
+        setBalancePromptLimit,
       }}
     >
       {children}

@@ -153,7 +153,8 @@ const SegmentedButtons = ({ value, onValueChange, buttons }) => (
 );
 
 const BudgetScreen = () => {
-  const { userAccount, familyCode, accounts } = useContext(AppContext);
+  const { userAccount, familyCode, accounts, balancePromptLimit } =
+    useContext(AppContext);
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [dateRange, setDateRange] = useState('');
@@ -371,19 +372,9 @@ const BudgetScreen = () => {
         dateRange,
         dateRangeStart,
         dateRangeEnd,
+        category = null,
+        selectedAccount = null,
       } = budget;
-
-      let category = null;
-      let account = null;
-
-      if (allocationType === 'category') {
-        category = budget.category || null;
-      } else if (allocationType === 'account') {
-        account = budget.account || null;
-        if (account && account.category) {
-          category = account.category;
-        }
-      }
 
       const filteredTransactions = filterFamilyExpenseHistoryByDateRange(
         familyCode.familyExpenseHistory,
@@ -393,7 +384,7 @@ const BudgetScreen = () => {
         return (
           (allocationType === 'category' &&
             item.category?.title === category?.title) ||
-          (allocationType === 'account' && item.uid === account?.uid)
+          (allocationType === 'account' && item.uid === selectedAccount?.uid)
         );
       });
 
@@ -411,8 +402,8 @@ const BudgetScreen = () => {
         dateRange,
         dateRangeStart,
         dateRangeEnd,
-        category: category || null,
-        account: account || null,
+        category,
+        selectedAccount,
         totalAmount,
         percentage,
         budgetStartDate: budget.dateRangeStart.toDate(),
@@ -562,7 +553,7 @@ const BudgetScreen = () => {
           dateRange: dateRange.toLowerCase(),
           dateRangeStart: startDate,
           dateRangeEnd: endDate,
-          account: {
+          selectedAccount: {
             name: account.name,
             profileBackground: account.profileBackground,
             uid: account.uid,
@@ -592,7 +583,8 @@ const BudgetScreen = () => {
                 accountAllocation.dateRangeStart.getTime() &&
               entry.dateRangeEnd.toDate().getTime() ===
                 accountAllocation.dateRangeEnd.getTime() &&
-              entry.account.uid === accountAllocation.account.uid
+              entry.selectedAccount.uid ===
+                accountAllocation.selectedAccount.uid
             );
           });
 
@@ -916,11 +908,18 @@ const BudgetScreen = () => {
     <List.Item
       key={budget.id}
       style={{
-        backgroundColor: hexToRgba(budget.account.profileBackground, 0.1),
+        backgroundColor: hexToRgba(
+          budget.selectedAccount.profileBackground,
+          0.1
+        ),
         borderRadius: 10,
         marginVertical: 2,
       }}
-      title={<Text style={{ fontWeight: 'bold' }}>{budget.account.name}</Text>}
+      title={
+        <Text style={{ fontWeight: 'bold' }}>
+          {budget.selectedAccount.name}
+        </Text>
+      }
       description={() => (
         <View style={{ width: '100%' }}>
           <Text variant="bodySmall">Description: {budget.description}</Text>
@@ -932,7 +931,7 @@ const BudgetScreen = () => {
           </Text>
           <ProgressBar
             progress={budget.percentage}
-            color={budget.account.profileBackground}
+            color={budget.selectedAccount.profileBackground}
             style={{
               width: '100%',
               height: 12,
@@ -951,7 +950,7 @@ const BudgetScreen = () => {
               icon={'account'}
               color="#FFFFFF"
               style={{
-                backgroundColor: budget.account.profileBackground,
+                backgroundColor: budget.selectedAccount.profileBackground,
               }}
             />
           )}
@@ -967,7 +966,7 @@ const BudgetScreen = () => {
             handleDeleteAllocation(budget.id, 'account');
           }}
           style={{
-            backgroundColor: budget.account.profileBackground,
+            backgroundColor: budget.selectedAccount.profileBackground,
             alignSelf: 'center',
           }}
         />
@@ -1179,7 +1178,11 @@ const BudgetScreen = () => {
                 {/* amount */}
                 <TextInput
                   mode="outlined"
-                  label="Amount"
+                  label={
+                    segmentValue === 'categoryAlloc'
+                      ? 'Amount'
+                      : `Amount (₱${formatCurrency(balancePromptLimit)})`
+                  }
                   outlineColor="#F5F6FA"
                   outlineStyle={{ borderRadius: 5 }}
                   activeOutlineColor="#151940"
