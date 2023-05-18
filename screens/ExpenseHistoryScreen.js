@@ -209,6 +209,39 @@ const ExpenseHistoryScreen = ({ jumpTo }) => {
       );
     }
   }, [value, setCurrentDate]);
+
+  // This code block handles loading the selected option month, week, day
+  useEffect(() => {
+    const loadSelectedOption = async () => {
+      try {
+        const savedOption = await AsyncStorage.getItem('selectedOption');
+        if (savedOption !== null) {
+          setValue(savedOption);
+        } else {
+          // If no saved option exists, set the default option
+          await AsyncStorage.setItem('selectedOption', value);
+        }
+      } catch (error) {
+        console.log('Error loading selected option:', error);
+      }
+    };
+
+    loadSelectedOption(); // Call the loadSelectedOption function when the component mounts
+  }, []);
+
+  // This code block handles saving the selected option month, week, day
+  useEffect(() => {
+    const saveSelectedOption = async () => {
+      try {
+        await AsyncStorage.setItem('selectedOption', value);
+      } catch (error) {
+        console.log('Error saving selected option:', error);
+      }
+    };
+
+    saveSelectedOption(); // Call the saveSelectedOption function whenever the selectedOption updates
+  }, [value]);
+
   // This code block handles showing modal from budget allocation
   useEffect(() => {
     // Remove budget IDs from AsyncStorage that are not present in accountBudgetAllocation
