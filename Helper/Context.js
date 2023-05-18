@@ -1,3 +1,4 @@
+// Imports
 import { createContext, useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../config';

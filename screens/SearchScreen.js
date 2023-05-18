@@ -1,3 +1,4 @@
+// Imports
 import {
   StyleSheet,
   View,
@@ -11,11 +12,13 @@ import { ScrollView } from 'react-native-gesture-handler';
 import { AppContext } from '../Helper/Context';
 import { formatCurrency, hexToRgba } from '../Helper/FormatFunctions';
 
+// The SearchScreen component represents the screen where users can search for transactions in their family's expense history.
 const SearchScreen = () => {
   const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState('');
   const { userAccount, familyCode } = useContext(AppContext);
 
+  // The onChangeSearch function is called whenever the search query changes, updating the searchQuery state.
   const onChangeSearch = (query) => setSearchQuery(query);
 
   // This code filters the family's expense history based on the user's account type and search query.
@@ -41,7 +44,6 @@ const SearchScreen = () => {
     })
     .filter((transaction) => {
       const lowerCaseSearchQuery = searchQuery.toLowerCase();
-
       return (
         transaction.name.toLowerCase().includes(lowerCaseSearchQuery) ||
         transaction.category.title
@@ -59,11 +61,13 @@ const SearchScreen = () => {
     });
   return (
     <>
+      {/* The component renders a StatusBar component to set the status bar appearance. */}
       <StatusBar
         backgroundColor="#FFFFFF"
         barStyle="dark-content"
         translucent={false}
       />
+      {/* Component to display the header */}
       <Appbar.Header style={{ backgroundColor: '#FFFFFF' }}>
         <Appbar.BackAction
           style={{
@@ -78,6 +82,7 @@ const SearchScreen = () => {
         />
         <Appbar.Content
           title={
+            // Input field for searching transactions.
             <TextInput
               autoFocus={true}
               mode="outlined"
@@ -110,9 +115,12 @@ const SearchScreen = () => {
           }
         />
       </Appbar.Header>
+      {/* The main content of the screen is wrapped inside a View component with styles.container. */}
       <View style={styles.container}>
         <View style={{ flex: 1 }}>
+          {/* ScrollView that wraps the content to enable scrolling. */}
           <ScrollView>
+            {/* Display each search transaction item as a List.Item */}
             {searchQuery &&
               filteredTransactions?.map((transaction, index) => {
                 return (

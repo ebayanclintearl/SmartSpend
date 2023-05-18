@@ -1,3 +1,4 @@
+// Function to validate transaction inputs.
 export const validateTransactionInputs = (
   dateString,
   amount,
@@ -70,6 +71,7 @@ export const validateTransactionInputs = (
     errorCategory: false,
   };
 };
+// Function to validate category allocation inputs.
 export const validateCategoryAllocationInputs = (
   description,
   amount,
@@ -142,6 +144,7 @@ export const validateCategoryAllocationInputs = (
     errorSelection: false,
   };
 };
+// Function to validate suggest inputs.
 export const validateSuggestInputs = (amount, dateRange) => {
   if (!amount.trim()) {
     return {
@@ -185,6 +188,7 @@ export const validateSuggestInputs = (amount, dateRange) => {
     errorSelection: false,
   };
 };
+// Function to validate sign-up inputs.
 export const validateSignUpInputs = (
   accountName,
   email,
@@ -273,6 +277,7 @@ export const validateSignUpInputs = (
     errorFamilyCode: false,
   };
 };
+// Function to validate sign-in inputs.
 export const validateSignInInputs = (email, password) => {
   if (!email.trim()) {
     return {

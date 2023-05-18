@@ -1,6 +1,7 @@
+// Imports
 import { StatusBar, StyleSheet, View } from 'react-native';
-import React, { useContext, useState } from 'react';
-import { AccountContext, AppContext } from '../Helper/Context';
+import React, { useContext } from 'react';
+import { AppContext } from '../Helper/Context';
 import { Appbar, Avatar, Button, Text } from 'react-native-paper';
 import {
   formatCurrency,
@@ -11,12 +12,14 @@ import { useNavigation } from '@react-navigation/native';
 import { deleteField, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../config';
 
+// The DetailScreen component displays the user's transaction information with remove and edit transaction functionalities.
 const DetailScreen = ({ route }) => {
   const navigation = useNavigation();
   const { transactionId } = route.params;
   const { userAccount, familyCode } = useContext(AppContext);
   const transaction = familyCode?.familyExpenseHistory[transactionId];
 
+  // Helper Functions
   const handleRemove = async () => {
     try {
       navigation.pop();
@@ -35,11 +38,13 @@ const DetailScreen = ({ route }) => {
   };
   return (
     <>
+      {/* The component renders a StatusBar component to set the status bar appearance. */}
       <StatusBar
         backgroundColor="#FFFFFF"
         barStyle="dark-content"
         translucent={false}
       />
+      {/* Component to display the header */}
       <Appbar.Header
         mode="center-aligned"
         style={{ backgroundColor: '#FFFFFF' }}
@@ -64,8 +69,10 @@ const DetailScreen = ({ route }) => {
           }
         />
       </Appbar.Header>
+      {/* The main content of the screen is wrapped inside a View component with styles.container. */}
       <View style={styles.container}>
         <View style={{ paddingHorizontal: '3%', flex: 1 }}>
+          {/* Transaction Details */}
           <View
             style={{
               width: '100%',
@@ -115,6 +122,7 @@ const DetailScreen = ({ route }) => {
                 formatDateAndTime(transaction?.date?.toDate())}
             </Text>
           </View>
+          {/* Inline Buttons */}
           <View
             style={{
               flex: 1,
@@ -128,6 +136,7 @@ const DetailScreen = ({ route }) => {
                 flexDirection: 'row',
               }}
             >
+              {/* Edit button */}
               <Button
                 mode="contained"
                 icon="pencil"
@@ -144,6 +153,7 @@ const DetailScreen = ({ route }) => {
               >
                 Edit
               </Button>
+              {/* Remove button */}
               <Button
                 mode="contained"
                 icon="trash-can"

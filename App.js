@@ -1,3 +1,4 @@
+// Imports
 import {
   configureFonts,
   DefaultTheme,
@@ -9,7 +10,9 @@ import MainStack from './routes/MainStack';
 import { AppContextProvider } from './Helper/Context';
 import { fontConfig } from './Helper/FontConfig';
 
+// The App component is the entry point of the application.
 export default function App() {
+  // App theme configuration
   const theme = {
     ...DefaultTheme,
     dark: false,

@@ -1,3 +1,4 @@
+// Imports
 import {
   Image,
   ScrollView,
@@ -102,6 +103,7 @@ const registerForPushNotificationsAsync = async () => {
 
   return token;
 };
+// The SegmentedButtons component renders a set of segmented buttons.
 const SegmentedButtons = ({ value, onValueChange, buttons }) => (
   <View
     style={{
@@ -199,7 +201,6 @@ const BudgetScreen = () => {
   // Bottom sheet
   const sheetRef = useRef(null);
   const snapPoints = useMemo(() => ['90%'], []);
-
   // Notification
   useEffect(() => {
     // Register for push notifications and update expoPushToken state
@@ -338,7 +339,6 @@ const BudgetScreen = () => {
   const handleCloseSheetPress = useCallback(() => {
     sheetRef.current?.close();
   }, []);
-
   function filterFamilyExpenseHistoryByDateRange(
     transactions,
     timeRange,
@@ -356,7 +356,6 @@ const BudgetScreen = () => {
       );
     });
   }
-
   function computeBudgetAllocation(timeRange, allocationType = 'category') {
     const filteredBudgets = Object.entries(
       allocationType === 'category'
@@ -415,7 +414,6 @@ const BudgetScreen = () => {
 
     return result;
   }
-
   async function sendBudgetNotifications(
     categoryBudgetAllocationForDay,
     categoryBudgetAllocationForWeek,
@@ -983,14 +981,15 @@ const BudgetScreen = () => {
       }}
     />
   );
-
   return (
     <>
+      {/* The component renders a StatusBar component to set the status bar appearance. */}
       <StatusBar
         backgroundColor="#FFFFFF"
         barStyle="dark-content"
         translucent={false}
       />
+      {/* Component to display the header */}
       <Appbar.Header style={{ backgroundColor: '#FFFFFF' }}>
         <Appbar.Content
           title={
@@ -1016,6 +1015,7 @@ const BudgetScreen = () => {
           style={{ backgroundColor: '#FFAF38' }}
         />
       </Appbar.Header>
+      {/* The main content of the screen is wrapped inside a View component with styles.container. */}
       <View style={styles.container}>
         <View
           style={{
@@ -1023,6 +1023,7 @@ const BudgetScreen = () => {
             flexGrow: 1,
           }}
         >
+          {/* If there are no budget allocations, display information about the benefits of tracking. */}
           {categoryBudgetAllocationForDay.length <= 0 &&
             categoryBudgetAllocationForWeek.length <= 0 &&
             categoryBudgetAllocationForMonth.length <= 0 &&
@@ -1052,6 +1053,7 @@ const BudgetScreen = () => {
                 </Text>
               </View>
             )}
+          {/* Render budget allocations by account and category if there are any. */}
           <ScrollView>
             {accountBudgetAllocationForDay.length > 0 ||
             accountBudgetAllocationForWeek.length > 0 ||
@@ -1107,6 +1109,7 @@ const BudgetScreen = () => {
             ) : null}
           </ScrollView>
         </View>
+        {/* Display bottom sheet */}
         <BottomSheet
           ref={sheetRef}
           index={-1}
@@ -1121,11 +1124,13 @@ const BudgetScreen = () => {
               padding: 10,
             }}
           >
+            {/* Display budget allocation form for account and category. */}
             {addAllocation && (
               <View>
                 <Text variant="titleLarge" style={{ textAlign: 'center' }}>
                   Choose Allocation
                 </Text>
+                {/* Render segmented buttons for selecting category or account */}
                 <SegmentedButtons
                   value={segmentValue}
                   onValueChange={setSegmentValue}
@@ -1140,7 +1145,7 @@ const BudgetScreen = () => {
                     },
                   ]}
                 />
-                {/* description */}
+                {/* Input field for entering description */}
                 <TextInput
                   mode="outlined"
                   label={'Budget Description'}
@@ -1169,13 +1174,13 @@ const BudgetScreen = () => {
                     />
                   }
                 />
+                {/* Display error message for invalid description */}
                 {error.errorDescription && (
                   <HelperText type="error" visible={error.errorDescription}>
                     {error.errorMessage}
                   </HelperText>
                 )}
-
-                {/* amount */}
+                {/* Input field for entering amount */}
                 <TextInput
                   mode="outlined"
                   label={
@@ -1207,14 +1212,15 @@ const BudgetScreen = () => {
                     />
                   }
                 />
+                {/* Display error message for invalid amount */}
                 {error.errorAmount && (
                   <HelperText type="error" visible={error.errorAmount}>
                     {error.errorMessage}
                   </HelperText>
                 )}
 
-                {/* date range */}
                 <View>
+                  {/* Select date range */}
                   <TouchableWithoutFeedback
                     onPress={() => handleDateRangePress()}
                   >
@@ -1246,11 +1252,13 @@ const BudgetScreen = () => {
                       />
                     </View>
                   </TouchableWithoutFeedback>
+                  {/* Display error message for invalid date range */}
                   {error.errorDateRange && (
                     <HelperText type="error" visible={error.errorDateRange}>
                       {error.errorMessage}
                     </HelperText>
                   )}
+                  {/* Display date range selection list */}
                   <Surface
                     style={[
                       styles.surface,
@@ -1279,12 +1287,12 @@ const BudgetScreen = () => {
                   </Surface>
                 </View>
 
-                {/* category */}
                 <View
                   style={{
                     display: dateRangeExpanded ? 'none' : 'flex',
                   }}
                 >
+                  {/* Select category */}
                   <TouchableWithoutFeedback
                     onPress={() =>
                       segmentValue === 'categoryAlloc'
@@ -1324,11 +1332,13 @@ const BudgetScreen = () => {
                       />
                     </View>
                   </TouchableWithoutFeedback>
+                  {/* Display error message for invalid category */}
                   {error.errorSelection && (
                     <HelperText type="error" visible={error.errorSelection}>
                       {error.errorMessage}
                     </HelperText>
                   )}
+                  {/* Display category selection list */}
                   <Surface
                     style={[
                       styles.surface,
@@ -1370,6 +1380,7 @@ const BudgetScreen = () => {
                     </View>
                   </Surface>
                 </View>
+                {/* Save button */}
                 <Button
                   mode="contained"
                   compact={true}
@@ -1389,10 +1400,10 @@ const BudgetScreen = () => {
                 </Button>
               </View>
             )}
-
+            {/* Display suggest category allocation form. */}
             {suggestAllocation && (
               <View>
-                {/* Display allocation icon */}
+                {/* Display allocation icon. */}
                 <View
                   style={{
                     width: '100%',
@@ -1410,6 +1421,7 @@ const BudgetScreen = () => {
                     source={require('../assets/AppAssets/allocation_algo_icon.png')}
                   />
                 </View>
+                {/* Title */}
                 <Text
                   variant="displayMedium"
                   style={{
@@ -1420,6 +1432,7 @@ const BudgetScreen = () => {
                 >
                   Suggest Category Allocation
                 </Text>
+                {/* Display details and steps for the algorithm. */}
                 <Text style={{ textAlign: 'auto' }}>
                   The main idea of the Category Allocation Algorithm is to
                   distribute the available budget among different expense
@@ -1430,6 +1443,7 @@ const BudgetScreen = () => {
                   resources while staying within the specified budget
                   constraint.
                 </Text>
+                {/* Display additional content for the algorithm steps */}
                 {showMore && (
                   <Text style={{ textAlign: 'auto' }}>
                     <Text>
@@ -1511,8 +1525,7 @@ const BudgetScreen = () => {
                     {showMore ? 'Hide' : 'Show More'}
                   </Text>
                 </TouchableOpacity>
-
-                {/* budget */}
+                {/* Input field for entering budget */}
                 <TextInput
                   mode="outlined"
                   label="Budget"
@@ -1540,13 +1553,13 @@ const BudgetScreen = () => {
                     />
                   }
                 />
+                {/* Display error message for invalid amount */}
                 {error.errorAmount && (
                   <HelperText type="error" visible={error.errorAmount}>
                     {error.errorMessage}
                   </HelperText>
                 )}
-
-                {/* date range */}
+                {/* Input field for entering date range */}
                 <View>
                   <TouchableWithoutFeedback
                     onPress={() => handleDateRangePress()}
@@ -1579,11 +1592,13 @@ const BudgetScreen = () => {
                       />
                     </View>
                   </TouchableWithoutFeedback>
+                  {/* Display error message for invalid date range */}
                   {error.errorDateRange && (
                     <HelperText type="error" visible={error.errorDateRange}>
                       {error.errorMessage}
                     </HelperText>
                   )}
+                  {/* Display category selection list */}
                   <Surface
                     style={[
                       styles.surface,
@@ -1611,7 +1626,7 @@ const BudgetScreen = () => {
                     </View>
                   </Surface>
                 </View>
-
+                {/* Suggest button */}
                 <Button
                   mode="contained"
                   compact={true}

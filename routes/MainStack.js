@@ -1,3 +1,4 @@
+// Imports
 import { createStackNavigator } from '@react-navigation/stack';
 import QuickStartScreen from '../screens/QuickStartScreen';
 import SignInScreen from '../screens/SignInScreen';
@@ -13,6 +14,7 @@ import SignUpSuccessScreen from '../screens/SignUpSuccessScreen';
 
 const Stack = createStackNavigator();
 
+// The MainStack component is responsible for defining the main stack of screens in the application.
 function MainStack() {
   const { loggedIn, onboardingComplete, displaySignUpSuccess } =
     useContext(AppContext);

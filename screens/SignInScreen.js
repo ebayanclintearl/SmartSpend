@@ -1,3 +1,4 @@
+// Imports
 import { Image, StatusBar, StyleSheet, View } from 'react-native';
 import React, { useState } from 'react';
 import {
@@ -13,6 +14,8 @@ import { validateSignInInputs } from '../Helper/Validation';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useNavigation } from '@react-navigation/native';
+
+// The SignInScreen component represents the screen where users can sign in to their account.
 const SignInScreen = () => {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
@@ -31,7 +34,7 @@ const SignInScreen = () => {
   const toggleSecure = () => setSecure(!secure);
   const onDismissSnackBar = () => setShowSnackBar(false);
 
-  // Function to handle sign in button press
+  // Function to handle sign in
   const handleSignIn = async () => {
     // Validate sign in inputs
     const validationResult = validateSignInInputs(email, password);
@@ -59,13 +62,15 @@ const SignInScreen = () => {
   };
   return (
     <>
-      {/* SafeAreaView and KeyboardAwareScrollView from react-native libraries */}
+      {/* Provides a safe area for content rendering, ensuring it is visible and not obstructed by device-specific elements like notches or status bars. */}
       <SafeAreaView style={styles.container}>
+        {/* The component renders a StatusBar component to set the status bar appearance. */}
         <StatusBar
           backgroundColor="#38B6FF"
           barStyle="light-content"
           translucent
         />
+        {/* The KeyboardAwareScrollView component ensures that the screen's content is scrollable and adjusts the keyboard behavior. */}
         <KeyboardAwareScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <View
             style={{
@@ -150,7 +155,7 @@ const SignInScreen = () => {
                 backgroundColor: '#F5F6FA',
               }}
             />
-            {/* Button for login */}
+            {/* Login button */}
             <Button
               mode="contained"
               style={{ marginVertical: 10, borderRadius: 5 }}
@@ -167,6 +172,7 @@ const SignInScreen = () => {
               style={{ flex: 1, justifyContent: 'flex-end', marginBottom: 30 }}
             >
               <Text variant="labelLarge">Don't have an account?</Text>
+              {/* Register button */}
               <Button
                 mode="text"
                 icon="arrow-right"
@@ -180,6 +186,7 @@ const SignInScreen = () => {
             </View>
           </View>
         </KeyboardAwareScrollView>
+        {/* The Snackbar component displays a network error message if there is a network request failure. */}
         <Snackbar visible={showSnackBar} onDismiss={onDismissSnackBar}>
           Network Error.
         </Snackbar>

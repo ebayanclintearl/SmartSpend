@@ -1,3 +1,4 @@
+// Imports
 import { Image, StatusBar, StyleSheet, View } from 'react-native';
 import React, { useContext, useState } from 'react';
 import {
@@ -17,6 +18,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { useNavigation } from '@react-navigation/native';
 import randomColor from 'randomcolor';
 
+// The SignUpScreen component represents the screen where users can register.
 const SignUpScreen = ({ route }) => {
   const navigation = useNavigation();
   const { code } = route.params ?? {};
@@ -44,7 +46,7 @@ const SignUpScreen = ({ route }) => {
     setSecureConfirmPassword(!secureConfirmPassword);
   const onDismissSnackBar = () => setShowSnackBar(false);
 
-  // Function to handle sign up button press
+  // Function to handle sign up
   const handleSignUp = async () => {
     // Validate sign up inputs
     const validationResult = validateSignUpInputs(
@@ -60,12 +62,14 @@ const SignUpScreen = ({ route }) => {
     try {
       setShowLoading(true);
       setDisplaySignUpSuccess(true);
+      // Create a new user
       const res = await createUserWithEmailAndPassword(auth, email, password);
+      // Update the user's display name with the provided accountName.
       await updateProfile(res.user, { displayName: accountName });
-
+      // Generate code
       const generatedCode = Math.floor(Math.random() * 90000) + 10000;
       const userRef = doc(db, 'users', res.user.uid);
-
+      // Add account details to db
       await setDoc(userRef, {
         uid: res.user.uid,
         name: accountName,
@@ -75,7 +79,7 @@ const SignUpScreen = ({ route }) => {
         accountType: code ? 'member' : 'provider',
         familyCode: code ? parseInt(code) : generatedCode,
       });
-
+      // If code is empty, generate code for provider
       if (!code) {
         const codeRef = doc(db, 'familyCodes', generatedCode.toString());
         await setDoc(codeRef, {
@@ -116,13 +120,15 @@ const SignUpScreen = ({ route }) => {
 
   return (
     <>
-      {/* SafeAreaView and KeyboardAwareScrollView from react-native libraries */}
+      {/* Provides a safe area for content rendering, ensuring it is visible and not obstructed by device-specific elements like notches or status bars. */}
       <SafeAreaView style={styles.container}>
+        {/* The component renders a StatusBar component to set the status bar appearance. */}
         <StatusBar
           backgroundColor="#FF4C38"
           barStyle="light-content"
           translucent
         />
+        {/* The KeyboardAwareScrollView component ensures that the screen's content is scrollable and adjusts the keyboard behavior. */}
         <KeyboardAwareScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <View
             style={{
@@ -255,7 +261,7 @@ const SignUpScreen = ({ route }) => {
                 backgroundColor: '#F5F6FA',
               }}
             />
-            {/* Button for login */}
+            {/* Register button */}
             <Button
               mode="contained"
               style={{ marginVertical: 10, borderRadius: 5 }}
@@ -272,6 +278,7 @@ const SignUpScreen = ({ route }) => {
               style={{ flex: 1, justifyContent: 'flex-end', marginBottom: 30 }}
             >
               <Text variant="labelLarge">Already have an account?</Text>
+              {/* Login button */}
               <Button
                 mode="text"
                 icon="arrow-right"
@@ -285,6 +292,7 @@ const SignUpScreen = ({ route }) => {
             </View>
           </View>
         </KeyboardAwareScrollView>
+        {/* The Snackbar component displays a network error message if there is a network request failure. */}
         <Snackbar visible={showSnackBar} onDismiss={onDismissSnackBar}>
           Network Error.
         </Snackbar>

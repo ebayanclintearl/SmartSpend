@@ -1,12 +1,13 @@
-import { Image, SafeAreaView, StatusBar, StyleSheet } from 'react-native';
+// Imports
+import { Image, SafeAreaView, StatusBar } from 'react-native';
 import React, { useContext } from 'react';
-
 import Onboarding from 'react-native-onboarding-swiper';
-import { Button, IconButton } from 'react-native-paper';
+import { IconButton } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppContext } from '../Helper/Context';
 
+// Display the custom next and done button
 const Next = ({ isLight, ...props }) => (
   <IconButton
     {...props}
@@ -26,9 +27,11 @@ const Done = ({ isLight, ...props }) => (
   />
 );
 
+// The OnboardingScreen component represents the screen that displays the onboarding process for the application.
 const OnboardingScreen = () => {
   const navigation = useNavigation();
   const { setOnboardingComplete } = useContext(AppContext);
+  // The completeOnboarding function is an asynchronous function that is called when the onboarding process is completed.
   async function completeOnboarding() {
     try {
       await AsyncStorage.setItem('onboardingComplete', 'true');
@@ -38,14 +41,16 @@ const OnboardingScreen = () => {
       console.log(error);
     }
   }
-
   return (
+    // * Provides a safe area for content rendering, ensuring it is visible and not obstructed by device-specific elements like notches or status bars.
     <SafeAreaView style={{ flex: 1 }}>
+      {/* The component renders a StatusBar component to set the status bar appearance. */}
       <StatusBar
         backgroundColor="#38B6FF"
         barStyle="light-content"
         translucent
       />
+      {/* This component display the onboarding contents. */}
       <Onboarding
         onDone={() => {
           completeOnboarding();

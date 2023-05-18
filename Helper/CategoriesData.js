@@ -1,3 +1,4 @@
+// Expense categories with their respective IDs, titles, icons, and colors.
 export const expenseCategories = [
   { id: 1, title: 'Food', icon: 'food', color: '#7AA874' },
   { id: 2, title: 'Bills', icon: 'cash-100', color: '#FFA07A' },
@@ -39,7 +40,7 @@ export const expenseCategories = [
   { id: 28, title: 'Staff Salary', icon: 'account-tie', color: '#4B0082' },
   { id: 29, title: 'Others', icon: 'dots-horizontal', color: '#A9A9A9' },
 ];
-
+// Income categories with their respective IDs, titles, icons, and colors.
 export const incomeCategories = [
   {
     id: 1,

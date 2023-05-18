@@ -1,3 +1,4 @@
+// Format a given date to "Day Month Year" format.
 export const formatDate = (date) => {
   const months = [
     'January',
@@ -15,6 +16,7 @@ export const formatDate = (date) => {
   ];
   return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
 };
+// Format a date range to display as "StartDay to EndDay Month Year" format.
 export const formatDateRange = (startDate, endDate) => {
   const months = [
     'Jan',
@@ -45,6 +47,7 @@ export const formatDateRange = (startDate, endDate) => {
   // Otherwise, format the date range with the full month name
   return `${startDay} ${startMonth} to ${endDay} ${endMonth} ${endYear}`;
 };
+// Format a given date to "Month Day, Year - Hour:Minute AM/PM" format.
 export const formatDateAndTime = (date) => {
   const monthNames = [
     'January',
@@ -81,6 +84,7 @@ export const formatDateAndTime = (date) => {
 
   return `${monthName} ${day}, ${year} - ${hours}:${minutes} ${ampm}`;
 };
+// Format a given amount to currency format with commas for thousands separator.
 export const formatCurrency = (amount) => {
   if (isNaN(amount)) {
     return '0.00';
@@ -90,6 +94,7 @@ export const formatCurrency = (amount) => {
     .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
     .replace(/\s/g, '');
 };
+// Function to handle amount change.
 export const handleAmountChange = (value, setAmount) => {
   // Remove all non-numeric characters from the input
   const numericValue = isNaN(value)
@@ -137,6 +142,7 @@ export const handleAmountChange = (value, setAmount) => {
   // Update the state with the formatted value
   setAmount(formattedValue);
 };
+// Function to convert a hexadecimal color code to RGBA.
 export const hexToRgba = (hex, alpha) => {
   if (!hex) return;
   const r = parseInt(hex.slice(1, 3), 16); // Convert the red component of the hexadecimal color code to decimal.

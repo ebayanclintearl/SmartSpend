@@ -1,3 +1,4 @@
+// Imports
 import React, { useContext, useEffect, useState } from 'react';
 import {
   View,
@@ -32,6 +33,7 @@ import { useNavigation } from '@react-navigation/native';
 import { validateTransactionInputs } from '../Helper/Validation';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+// The SegmentedButtons component renders a set of segmented buttons.
 const SegmentedButtons = ({ value, onValueChange, buttons }) => (
   <View
     style={{
@@ -82,6 +84,7 @@ const SegmentedButtons = ({ value, onValueChange, buttons }) => (
   </View>
 );
 
+// The AddScreen component is a form screen for adding or editing a transaction.
 const AddScreen = ({ route }) => {
   const navigation = useNavigation();
   const { transactionId } = route.params ?? {};
@@ -90,6 +93,9 @@ const AddScreen = ({ route }) => {
   const [dateString, setDateString] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
+  const [accountType, setAccountType] = useState('');
+  const [name, setName] = useState('');
+  const [uid, setUid] = useState('');
   const [category, setCategory] = useState(null);
   const [expanded, setExpanded] = useState(false);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
@@ -103,16 +109,27 @@ const AddScreen = ({ route }) => {
     errorCategory: false,
   });
 
-  // This code block sets up the initial state for a form
+  // This code block sets up the initial state for a form and handle side effects.
   useEffect(() => {
     if (transactionId) {
       const transactionInfo = familyCode?.familyExpenseHistory[transactionId];
-      const { date, amount, description, category, expenseType } =
-        transactionInfo;
+      const {
+        date,
+        amount,
+        description,
+        category,
+        expenseType,
+        accountType,
+        uid,
+        name,
+      } = transactionInfo;
       currentDateAndTime(date.toDate());
       handleAmountChange(amount, setAmount);
       setDescription(description);
       setCategory(category);
+      setAccountType(accountType);
+      setUid(uid);
+      setName(name);
       setSegmentValue(expenseType);
     } else {
       currentDateAndTime(new Date());
@@ -126,6 +143,7 @@ const AddScreen = ({ route }) => {
     setCategory(null);
   }, [segmentValue]);
 
+  // Helper Functions
   const handleCategoryPress = () => setExpanded(!expanded);
   const handleDateConfirm = (date) => {
     setDatePickerVisibility(false);
@@ -135,7 +153,6 @@ const AddScreen = ({ route }) => {
     setDateString(formatDateAndTime(date));
     setDate(date);
   };
-
   const handleSave = async () => {
     const validationResult = validateTransactionInputs(
       dateString,
@@ -170,8 +187,23 @@ const AddScreen = ({ route }) => {
       );
 
       if (transactionId) {
+        const transactionEdit = {
+          uid: uid,
+          name: name,
+          date: date,
+          amount: parseFloat(amount.replace(/,/g, '')),
+          description: description,
+          accountType: accountType,
+          expenseType: segmentValue,
+          category: {
+            title: category.title,
+            icon: category.icon,
+            color: category.color,
+          },
+        };
+
         await updateDoc(familyCodeRef, {
-          ['familyExpenseHistory.' + transactionId]: transaction,
+          ['familyExpenseHistory.' + transactionId]: transactionEdit,
         });
         navigation.navigate('ExpenseHistoryScreen');
       } else {
@@ -194,6 +226,7 @@ const AddScreen = ({ route }) => {
     }
   };
 
+  // Used to render the category items in the category selection list.
   const renderCategoryItems = (item) => (
     <List.Item
       key={item.id}
@@ -221,11 +254,13 @@ const AddScreen = ({ route }) => {
   );
   return (
     <>
+      {/* The component renders a StatusBar component to set the status bar appearance. */}
       <StatusBar
         backgroundColor="#FFFFFF"
         barStyle="dark-content"
         translucent={false}
       />
+      {/* Component to display the header */}
       <Appbar.Header
         mode="center-aligned"
         style={{ backgroundColor: '#FFFFFF' }}
@@ -249,7 +284,9 @@ const AddScreen = ({ route }) => {
           }
         />
       </Appbar.Header>
+      {/* Provides a safe area for content rendering, ensuring it is visible and not obstructed by device-specific elements like notches or status bars. */}
       <SafeAreaProvider>
+        {/* Display the date picker modal */}
         <DateTimePickerModal
           date={date}
           isVisible={isDatePickerVisible}
@@ -257,9 +294,11 @@ const AddScreen = ({ route }) => {
           onConfirm={handleDateConfirm}
           onCancel={() => setDatePickerVisibility(false)}
         />
+        {/* The main content of the screen is wrapped inside a View component with styles.container. */}
         <View style={styles.container}>
           <ScrollView>
             <View style={{ paddingHorizontal: '3%' }}>
+              {/* Render segmented buttons for selecting income or expense */}
               <SegmentedButtons
                 value={segmentValue}
                 onValueChange={setSegmentValue}
@@ -286,7 +325,7 @@ const AddScreen = ({ route }) => {
                   },
                 ]}
               />
-
+              {/* Allow selecting date and time */}
               <TouchableWithoutFeedback
                 onPress={() => setDatePickerVisibility(true)}
               >
@@ -314,12 +353,13 @@ const AddScreen = ({ route }) => {
                   />
                 </View>
               </TouchableWithoutFeedback>
+              {/* Display error message for invalid date */}
               {error.errorDateString && (
                 <HelperText type="error" visible={error.errorDateString}>
                   {error.errorMessage}
                 </HelperText>
               )}
-
+              {/* Input field for entering amount */}
               <TextInput
                 mode="outlined"
                 label="Amount"
@@ -347,12 +387,13 @@ const AddScreen = ({ route }) => {
                   />
                 }
               />
+              {/* Display error message for invalid amount */}
               {error.errorAmount && (
                 <HelperText type="error" visible={error.errorAmount}>
                   {error.errorMessage}
                 </HelperText>
               )}
-
+              {/* Input field for entering description */}
               <TextInput
                 mode="outlined"
                 label="Description"
@@ -381,6 +422,7 @@ const AddScreen = ({ route }) => {
                   />
                 }
               />
+              {/* Display error message for invalid description */}
               {error.errorDescription && (
                 <HelperText type="error" visible={error.errorDescription}>
                   {error.errorMessage}
@@ -388,6 +430,7 @@ const AddScreen = ({ route }) => {
               )}
 
               <View style={{ alignItems: 'center' }}>
+                {/* Select category */}
                 <TouchableWithoutFeedback onPress={() => handleCategoryPress()}>
                   <View style={{ width: '100%' }}>
                     <TextInput
@@ -417,11 +460,13 @@ const AddScreen = ({ route }) => {
                     />
                   </View>
                 </TouchableWithoutFeedback>
+                {/* Display error message for invalid category */}
                 {error.errorCategory && (
                   <HelperText type="error" visible={error.errorCategory}>
                     {error.errorMessage}
                   </HelperText>
                 )}
+                {/* Display category selection list */}
                 <Surface
                   style={[
                     styles.surface,
@@ -436,6 +481,7 @@ const AddScreen = ({ route }) => {
                   </ScrollView>
                 </Surface>
               </View>
+              {/* Save button */}
               <Button
                 mode="contained"
                 compact={true}

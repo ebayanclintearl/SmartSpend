@@ -1,3 +1,4 @@
+// Font resources for different font weights and styles.
 export const fonts = {
   'Poppins-Black': require('../assets/fonts/Poppins-Black.ttf'),
   'Poppins-Bold': require('../assets/fonts/Poppins-Bold.ttf'),
@@ -9,6 +10,7 @@ export const fonts = {
   'Poppins-SemiBold': require('../assets/fonts/Poppins-SemiBold.ttf'),
   'Poppins-Thin': require('../assets/fonts/Poppins-Thin.ttf'),
 };
+// Font configuration for different text styles and sizes.
 export const fontConfig = {
   displaySmall: {
     fontFamily: 'Poppins-Bold',

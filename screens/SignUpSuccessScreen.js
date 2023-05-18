@@ -1,3 +1,4 @@
+// Imports
 import { Image, StyleSheet, View } from 'react-native';
 import React, { useContext } from 'react';
 import { StatusBar } from 'expo-status-bar';
@@ -6,6 +7,7 @@ import { Text, Button } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { AppContext } from '../Helper/Context';
 
+// The SignUpSuccessScreen component is displayed after a successful sign-up process.
 const SignUpSuccessScreen = () => {
   const navigation = useNavigation();
   const { currentUser, setDisplaySignUpSuccess } = useContext(AppContext);
@@ -14,12 +16,15 @@ const SignUpSuccessScreen = () => {
     navigation.navigate('HomeTabNavigatorScreen');
   };
   return (
+    // Provides a safe area for content rendering, ensuring it is visible and not obstructed by device-specific elements like notches or status bars.
     <SafeAreaView style={styles.container}>
+      {/* The component renders a StatusBar component to set the status bar appearance. */}
       <StatusBar
         backgroundColor="#38B6FF"
         barStyle="light-content"
         translucent
       />
+      {/* Display title with detail text and img background */}
       <View style={{ paddingHorizontal: '8%' }}>
         <Image
           resizeMode="contain"
@@ -51,6 +56,7 @@ const SignUpSuccessScreen = () => {
             SmartSpend is ready to work with you
           </Text>
         </View>
+        {/* Get started button */}
         <Button
           mode="elevated"
           style={{

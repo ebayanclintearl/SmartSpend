@@ -1,3 +1,4 @@
+// Imports
 import { StyleSheet, View, SafeAreaView, Image, StatusBar } from 'react-native';
 import React, { useState } from 'react';
 import { Appbar, Button, Text } from 'react-native-paper';
@@ -12,6 +13,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../config';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
+// Number of cell in the input field
 const CELL_COUNT = 5;
 const CodeVerificationScreen = () => {
   const navigation = useNavigation();
@@ -23,6 +25,7 @@ const CodeVerificationScreen = () => {
     value,
     setValue,
   });
+  // Helper Functions
   const handleNext = async () => {
     setShowloading(true);
     const codeExist = await handleCodeVerification(value);
@@ -43,14 +46,17 @@ const CodeVerificationScreen = () => {
   };
   return (
     <>
-      {/* SafeAreaView and KeyboardAwareScrollView from react-native libraries */}
+      {/* Provides a safe area for content rendering, ensuring it is visible and not obstructed by device-specific elements like notches or status bars. */}
       <SafeAreaView style={styles.container}>
+        {/* The component renders a StatusBar component to set the status bar appearance. */}
         <StatusBar
           backgroundColor="#FF4C38"
           barStyle="light-content"
           translucent
         />
+        {/* Wrap the content with KeyboardAwareScrollView to enable scrolling when the keyboard is open */}
         <KeyboardAwareScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          {/* Component to display the header */}
           <Appbar.Header style={{ backgroundColor: '#FFFFFF' }}>
             <Appbar.BackAction
               style={{
@@ -70,7 +76,7 @@ const CodeVerificationScreen = () => {
               flex: 1,
             }}
           >
-            {/* Display register prompt text and img background */}
+            {/* Display title with detail text and img background */}
             <View
               style={{
                 width: '100%',
@@ -104,12 +110,13 @@ const CodeVerificationScreen = () => {
                 justifyContent: 'center',
               }}
             >
+              {/* Display error message for code */}
               {error && (
                 <Text style={{ color: '#FF4C38' }}>
                   Invalid verification code.
                 </Text>
               )}
-
+              {/* Input field for the code */}
               <CodeField
                 ref={ref}
                 {...props}
@@ -144,7 +151,7 @@ const CodeVerificationScreen = () => {
               />
             </View>
 
-            {/* Button for login */}
+            {/* Next button */}
             <View style={{ flex: 1, justifyContent: 'center' }}>
               <Button
                 mode="contained"
@@ -171,6 +178,7 @@ const CodeVerificationScreen = () => {
 };
 
 export default CodeVerificationScreen;
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFFFF' },
   title: { textAlign: 'center', fontSize: 30 },

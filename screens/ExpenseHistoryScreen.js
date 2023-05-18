@@ -1,6 +1,6 @@
+// Imports
 import { StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
 import React, { useContext, useEffect, useState } from 'react';
-
 import {
   Appbar,
   Avatar,
@@ -26,6 +26,7 @@ import { ScrollView } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'react-native';
 
+// The SegmentedButtons component renders a set of segmented buttons.
 const SegmentedButtons = ({ value, onValueChange, buttons }) => (
   <View
     style={{
@@ -59,6 +60,7 @@ const SegmentedButtons = ({ value, onValueChange, buttons }) => (
     ))}
   </View>
 );
+// The ExpenseHistoryScreen component displays the user's transaction history.
 const ExpenseHistoryScreen = ({ jumpTo }) => {
   const navigation = useNavigation();
   const { userAccount, familyCode, setBalancePromptLimit } =
@@ -120,7 +122,7 @@ const ExpenseHistoryScreen = ({ jumpTo }) => {
         return [];
       }
     });
-
+  // This code filters the account budget allocation for member by the selected time period (day, week, or month)
   const filteredByDateAccountBudgetAllocation = Object.entries(
     familyCode?.accountBudgetAllocation || {}
   )
@@ -320,14 +322,15 @@ const ExpenseHistoryScreen = ({ jumpTo }) => {
     filteredByDateFamilyExpenseHistory,
     filteredByDateAccountBudgetAllocation,
   ]);
-
   return (
     <>
+      {/* The component renders a StatusBar component to set the status bar appearance. */}
       <StatusBar
         backgroundColor="#FFFFFF"
         barStyle="dark-content"
         translucent={false}
       />
+      {/* Component to display the header */}
       <Appbar.Header style={{ backgroundColor: '#FFFFFF' }}>
         <Appbar.Content
           title={
@@ -372,7 +375,9 @@ const ExpenseHistoryScreen = ({ jumpTo }) => {
           color="#151940"
         />
       </Appbar.Header>
+      {/* The main content of the screen is wrapped inside a View component with styles.container. */}
       <View style={styles.container}>
+        {/* Display a modal component with budget allocation details */}
         <Portal>
           <Modal
             visible={visible}
@@ -455,8 +460,10 @@ const ExpenseHistoryScreen = ({ jumpTo }) => {
             )}
           </Modal>
         </Portal>
+        {/* ScrollView that wraps the content to enable scrolling. */}
         <ScrollView>
           <View style={{ paddingHorizontal: '3%', marginTop: 1 }}>
+            {/* Display the total balance, family budget, expense */}
             <View
               style={{
                 alignItems: 'center',
@@ -561,6 +568,7 @@ const ExpenseHistoryScreen = ({ jumpTo }) => {
                 </Card>
               </View>
             </View>
+            {/* Display a surface component date selection controls */}
             <Surface
               style={{
                 padding: 2,
@@ -627,6 +635,7 @@ const ExpenseHistoryScreen = ({ jumpTo }) => {
                 />
               </View>
             </Surface>
+            {/* Display the transaction history */}
             <Card
               mode="contained"
               style={{
@@ -636,6 +645,7 @@ const ExpenseHistoryScreen = ({ jumpTo }) => {
             >
               <Card.Content>
                 <Text variant="titleLarge">Recent History</Text>
+                {/* Display each transaction item as a List.Item */}
                 {filteredByDateFamilyExpenseHistory?.map(
                   (transaction, index) => {
                     return (
@@ -694,6 +704,7 @@ const ExpenseHistoryScreen = ({ jumpTo }) => {
                     );
                   }
                 )}
+                {/* Display a message when there is no data in the filteredByDateFamilyExpenseHistory array */}
                 {filteredByDateFamilyExpenseHistory.length === 0 && (
                   <View
                     style={{
@@ -710,6 +721,7 @@ const ExpenseHistoryScreen = ({ jumpTo }) => {
           </View>
         </ScrollView>
       </View>
+      {/* Render a Floating Action Button (FAB) component */}
       <FAB
         icon="plus"
         style={[

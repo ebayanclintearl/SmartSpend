@@ -1,12 +1,16 @@
+// Imports
 import { Image, SafeAreaView, StatusBar, StyleSheet, View } from 'react-native';
 import React from 'react';
 import { Appbar, Button, Text } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import OrDivider from '../components/OrDivider';
 
+// The RegistrationPromptScreen component represents the screen that prompts the user to choose their account type during the registration process.
 const RegistrationPromptScreen = () => {
   const navigation = useNavigation();
-
+  // The handlePress function is called when the user selects their account type.
+  // If the user is a Family Provider, it navigates to the SignUpScreen; otherwise,
+  // it navigates to the CodeVerificationScreen.
   const handlePress = (isFamilyProvider) => {
     if (isFamilyProvider) {
       navigation.navigate('SignUpScreen');
@@ -15,12 +19,15 @@ const RegistrationPromptScreen = () => {
     }
   };
   return (
+    // Provides a safe area for content rendering, ensuring it is visible and not obstructed by device-specific elements like notches or status bars.
     <SafeAreaView style={styles.container}>
+      {/* The component renders a StatusBar component to set the status bar appearance. */}
       <StatusBar
         backgroundColor="#FF4C38"
         barStyle="light-content"
         translucent
       />
+      {/* Component to display the header */}
       <Appbar.Header style={{ backgroundColor: '#FF4C38' }}>
         <Appbar.BackAction
           style={{ backgroundColor: '#FFFFFF', borderRadius: 12 }}
@@ -90,6 +97,7 @@ const RegistrationPromptScreen = () => {
             paddingVertical: 60,
           }}
         >
+          {/* Family Provider button */}
           <Button
             mode="elevated"
             style={{
@@ -107,6 +115,7 @@ const RegistrationPromptScreen = () => {
             I am a Family Provider
           </Button>
           <OrDivider />
+          {/* Family Member button */}
           <Button
             mode="elevated"
             style={{
